@@ -1,44 +1,79 @@
 
 use std::rc::Rc;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use words::{Word, BuiltinWord, Operation, block};
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum Entry {
+enum Entry {
     Alias(Word),
     Op(Rc<Operation>),
 }
 
-pub struct Dictionary {
+struct Inner {
     map: HashMap<Word, Entry>,
+    parent: Option<Rc<RefCell<Inner>>>,
+}
+
+impl Inner {
+    fn lookup(&self, word: &str) -> Option<Rc<Operation>> {
+        let mut entry = self.map.get(word);
+        while let Some(&Entry::Alias(ref word)) = entry {
+            match self.map.get(word) {
+                Some(ent) => {
+                    entry = Some(ent);
+                }
+                None => {
+                    return self.parent.as_ref().and_then(|p| p.borrow().lookup(word));
+                }
+            }
+        }
+        match entry {
+            Some(&Entry::Op(ref op)) => Some(op.clone()),
+            _ => {
+                self.parent.as_ref().and_then(|p| p.borrow().lookup(word))
+            }
+        }
+    }
+}
+
+pub struct Dictionary {
+    inner: Rc<RefCell<Inner>>,
 }
 
 impl Dictionary {
     pub fn new() -> Dictionary {
-        Dictionary { map: HashMap::new() }
+        Dictionary {
+            inner: Rc::new(RefCell::new(Inner {
+                map: HashMap::new(),
+                parent: None,
+            }))
+        }
+    }
+
+    pub fn with_parent(dict: &Dictionary) -> Dictionary {
+        Dictionary {
+            inner: Rc::new(RefCell::new(Inner {
+                map: HashMap::new(),
+                parent: Some(dict.inner.clone()),
+            }))
+        }
     }
 
     pub fn insert<T>(&mut self, word: T, op: Operation)
         where String: From<T>
     {
-        self.map.insert(From::from(word), Entry::Op(Rc::new(op)));
+        self.inner.borrow_mut().map.insert(From::from(word), Entry::Op(Rc::new(op)));
     }
 
     pub fn insert_alias<T>(&mut self, word: T, other: T)
         where String: From<T>
     {
-        self.map.insert(From::from(word), Entry::Alias(From::from(other)));
+        self.inner.borrow_mut().map.insert(From::from(word), Entry::Alias(From::from(other)));
     }
 
     pub fn lookup(&self, word: &str) -> Option<Rc<Operation>> {
-        let mut entry = self.map.get(word);
-        while let Some(&Entry::Alias(ref word)) = entry {
-            entry = self.map.get(word);
-        }
-        match entry {
-            Some(&Entry::Op(ref op)) => Some(op.clone()),
-            _ => None,
-        }
+        self.inner.borrow().lookup(word)
     }
 }
 
@@ -64,26 +99,41 @@ impl Default for Dictionary {
 
 #[cfg(test)]
 mod tests {
-    use {BuiltinWord, Operation};
+    use std::rc::Rc;
+    use words::{BuiltinWord, Operation};
     use super::*;
 
     #[test]
     fn test() {
         let mut dict: Dictionary = Default::default();
         assert_eq!(dict.lookup("add"),
-                   Some(&Operation::Builtin(BuiltinWord::Add)));
-        assert_eq!(dict.lookup("+"),
-                   Some(&Operation::Builtin(BuiltinWord::Add)));
+                   Some(Rc::new(Operation::Builtin(BuiltinWord::Add))));
         assert_eq!(dict.lookup("plus"), None);
-        dict.insert_alias("plus".to_string(), "+".to_string());
+        dict.insert_alias("plus", "add");
         assert_eq!(dict.lookup("plus"),
-                   Some(&Operation::Builtin(BuiltinWord::Add)));
-        dict.insert("incr".to_string(),
+                   Some(Rc::new(Operation::Builtin(BuiltinWord::Add))));
+        dict.insert("incr",
                     Operation::Block(vec!["1", "+"].into_iter().map(|s| s.to_string()).collect()));
         assert_eq!(dict.lookup("incr"),
-                   Some(&Operation::Block(vec!["1", "+"]
+                   Some(Rc::new(Operation::Block(vec!["1", "+"]
                                               .into_iter()
                                               .map(|s| s.to_string())
-                                              .collect())));
+                                              .collect()))));
+    }
+
+    #[test]
+    fn test_parent() {
+        let mut dict: Dictionary = Default::default();
+        dict.insert_alias("plus", "add");
+        assert_eq!(dict.lookup("plus"),
+                   Some(Rc::new(Operation::Builtin(BuiltinWord::Add))));
+
+        let mut sub = Dictionary::with_parent(&dict);
+        assert_eq!(sub.lookup("plus"),
+                   Some(Rc::new(Operation::Builtin(BuiltinWord::Add))));
+
+        sub.insert_alias("+", "plus");
+        assert_eq!(sub.lookup("+"),
+                   Some(Rc::new(Operation::Builtin(BuiltinWord::Add))));
     }
 }
