@@ -1,0 +1,25 @@
+
+,+ ,add   alias
+,- ,sub   alias
+,. ,mul   alias
+,/ ,div   alias
+,% ,mod   alias
+,s ,swap  alias
+,d ,dup   alias
+,p ,print alias
+
+,peek [ dup print ] def
+
+,++ [ 1 + ] def
+,-- [ 1 - ] def
+
+,1/ [ 1 swap div ] def
+
+,avg [
+    dup
+    len
+    swap
+    sum
+    swap
+    div
+] def

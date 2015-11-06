@@ -1,7 +1,7 @@
 
 use std::rc::Rc;
 use std::collections::HashMap;
-use super::{Word, BuiltinWord, Operation, block};
+use words::{Word, BuiltinWord, Operation, block};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Entry {
@@ -10,14 +10,12 @@ pub enum Entry {
 }
 
 pub struct Dictionary {
-    map: HashMap<Word, Entry>
+    map: HashMap<Word, Entry>,
 }
 
 impl Dictionary {
     pub fn new() -> Dictionary {
-        Dictionary {
-            map: HashMap::new(),
-        }
+        Dictionary { map: HashMap::new() }
     }
 
     pub fn insert<T>(&mut self, word: T, op: Operation)
@@ -37,7 +35,10 @@ impl Dictionary {
         while let Some(&Entry::Alias(ref word)) = entry {
             entry = self.map.get(word);
         }
-        match entry { Some(&Entry::Op(ref op)) => Some(op.clone()), _ => None }
+        match entry {
+            Some(&Entry::Op(ref op)) => Some(op.clone()),
+            _ => None,
+        }
     }
 }
 
@@ -55,41 +56,34 @@ impl Default for Dictionary {
         dict.insert("sum", Operation::Builtin(BuiltinWord::Sum));
         dict.insert("len", Operation::Builtin(BuiltinWord::Length));
         dict.insert("swap", Operation::Builtin(BuiltinWord::Swap));
-
-        dict.insert_alias("+", "add");
-        dict.insert_alias("-", "sub");
-        dict.insert_alias(".", "mul");
-        dict.insert_alias("/", "div");
-        dict.insert_alias("s", "swap");
-        dict.insert_alias("d", "dup");
-
-        dict.insert("peek", block(&["dup", "print"]));
-        dict.insert_alias("p", "print");
-
-        dict.insert("++", block(&["1", "+"]));
-
-        dict.insert("avg", block(&["dup", "len", "swap", "sum", "swap", "div"]));
-
-        dict.insert("1/", block(&["1", "swap", "div"]));
-
+        dict.insert("def", Operation::Builtin(BuiltinWord::Def));
+        dict.insert("alias", Operation::Builtin(BuiltinWord::Alias));
         dict
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use ::{BuiltinWord, Operation};
+    use {BuiltinWord, Operation};
     use super::*;
 
     #[test]
     fn test() {
         let mut dict: Dictionary = Default::default();
-        assert_eq!(dict.lookup("add"), Some(&Operation::Builtin(BuiltinWord::Add)));
-        assert_eq!(dict.lookup("+"), Some(&Operation::Builtin(BuiltinWord::Add)));
+        assert_eq!(dict.lookup("add"),
+                   Some(&Operation::Builtin(BuiltinWord::Add)));
+        assert_eq!(dict.lookup("+"),
+                   Some(&Operation::Builtin(BuiltinWord::Add)));
         assert_eq!(dict.lookup("plus"), None);
         dict.insert_alias("plus".to_string(), "+".to_string());
-        assert_eq!(dict.lookup("plus"), Some(&Operation::Builtin(BuiltinWord::Add)));
-        dict.insert("incr".to_string(), Operation::Block(vec!["1", "+"].into_iter().map(|s| s.to_string()).collect()));
-        assert_eq!(dict.lookup("incr"), Some(&Operation::Block(vec!["1", "+"].into_iter().map(|s| s.to_string()).collect())));
+        assert_eq!(dict.lookup("plus"),
+                   Some(&Operation::Builtin(BuiltinWord::Add)));
+        dict.insert("incr".to_string(),
+                    Operation::Block(vec!["1", "+"].into_iter().map(|s| s.to_string()).collect()));
+        assert_eq!(dict.lookup("incr"),
+                   Some(&Operation::Block(vec!["1", "+"]
+                                              .into_iter()
+                                              .map(|s| s.to_string())
+                                              .collect())));
     }
 }

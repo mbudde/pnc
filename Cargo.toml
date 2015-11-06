@@ -2,3 +2,8 @@
 name = "pnc2"
 version = "0.1.0"
 authors = ["Michael Budde <mbudde@gmail.com>"]
+
+[dependencies]
+shlex = "0.1"
+log = "0.3"
+env_logger = "0.3"
