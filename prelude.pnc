@@ -33,9 +33,15 @@
 } def
 
 ,fib {
-    0 s
-    1 s
-    { d roll3 + } s
+    0 swap
+    1 swap
+    { dup roll3 + } swap
     repeat
     pop
 } def
+
+,seq {
+    [[ 1 swap { d ++ } swap repeat pop ]]
+} def
+
+,! { seq /. } def
