@@ -35,14 +35,14 @@ impl fmt::Display for CalcError {
 pub type CalcResult<T> = Result<T, CalcError>;
 
 enum CalcState {
-    Executing,
     Reading { block: Vec<Word>, level: u32 },
+    Collecting { calc: Calc },
 }
 
 pub struct Calc {
     dict: dict::Dictionary,
     data: Vec<Value>,
-    state: CalcState,
+    state: Vec<CalcState>,
 }
 
 impl Calc {
@@ -50,7 +50,7 @@ impl Calc {
         Calc {
             dict: Default::default(),
             data: Vec::new(),
-            state: CalcState::Executing,
+            state: Vec::new(),
         }
     }
 
@@ -58,7 +58,7 @@ impl Calc {
         Calc {
             dict: dict::Dictionary::with_parent(&self.dict),
             data: Vec::new(),
-            state: CalcState::Executing,
+            state: Vec::new(),
         }
     }
 
@@ -81,10 +81,9 @@ impl Calc {
     }
 
     pub fn run_one(&mut self, word: &str) -> CalcResult<()> {
-        trace!("executing {:?}", word);
-        let state = mem::replace(&mut self.state, CalcState::Executing);
-        match state {
-            CalcState::Reading{ mut block, mut level } => {
+        match self.state.pop() {
+            Some(CalcState::Reading { mut block, mut level }) => {
+                trace!("reading {}", word);
                 if word == "}" && level == 0 {
                     self.data.push(Value::Block(block));
                 } else {
@@ -94,20 +93,40 @@ impl Calc {
                     } else if word == "{" {
                         level = level + 1;
                     }
-                    self.state = CalcState::Reading { block: block, level: level };
+                    self.state.push(CalcState::Reading { block: block, level: level });
                 }
             }
-            CalcState::Executing => {
+            Some(CalcState::Collecting { mut calc }) => {
+                trace!("collecting {}", word);
+                if word == "]" || word == "]]" {
+                    self.data.push(Value::Vector(calc.data));
+                } else {
+                    try!(calc.run_one(word));
+                    self.state.push(CalcState::Collecting { calc: calc });
+                }
+            }
+            None => {
+                trace!("executing {}", word);
                 if word.starts_with(",") {
                     self.data.push(Value::QuotedWord(word[1..].to_string()));
                 } else if word == "{" {
-                    self.state = CalcState::Reading { block: Vec::new(), level: 0 };
+                    self.state.push(CalcState::Reading { block: Vec::new(), level: 0 });
+                } else if word == "[[" {
+                    let mut calc = self.sub_calc();
+                    let val = try!(self.get_operand());
+                    calc.data.push(val);
+                    let state = CalcState::Collecting { calc: calc };
+                    self.state.push(state);
+                } else if word == "[" {
+                    let state = CalcState::Collecting { calc: self.sub_calc() };
+                    self.state.push(state);
                 } else if let Some(op) = self.dict.lookup(word) {
                     match *op {
                         Operation::Builtin(builtin) => {
                             try!(self.run_builtin(builtin));
                         }
                         Operation::Block(ref block) => {
+                            trace!("executing block: {:?}", block);
                             try!(self.run(block.into_iter()));
                         }
                     }
@@ -170,7 +189,7 @@ impl Calc {
                     let mut sub_calc = self.sub_calc();
                     sub_calc.data.push(val);
                     for word in &block {
-                        sub_calc.run_one(word);
+                        try!(sub_calc.run_one(word));
                     }
                     if let Some(res) = sub_calc.data.pop() {
                         result.push(res);
@@ -191,7 +210,7 @@ impl Calc {
                 for val in values {
                     sub_calc.data.push(val);
                     for word in &block {
-                        sub_calc.run_one(word);
+                        try!(sub_calc.run_one(word));
                     }
                 }
                 if let Some(res) = sub_calc.data.pop() {
@@ -247,7 +266,7 @@ impl Calc {
                 Ok(())
             }
             Repeat => {
-                let n = try!(self.get_int());
+                let n = try!(self.get_int_cast());
                 let block = try!(self.get_block());
                 for _ in 0..n {
                     for word in &block {
@@ -287,6 +306,11 @@ impl Calc {
     fn get_int(&mut self) -> CalcResult<i64> {
         self.get_operand().and_then(|val| val.as_int().ok_or(CalcError::WrongTypeOperand))
     }
+
+    fn get_int_cast(&mut self) -> CalcResult<i64> {
+        self.get_operand().and_then(|val| val.as_int_cast().ok_or(CalcError::WrongTypeOperand))
+    }
+
     fn get_float(&mut self) -> CalcResult<f64> {
         self.get_operand().and_then(|val| val.as_float().ok_or(CalcError::WrongTypeOperand))
     }

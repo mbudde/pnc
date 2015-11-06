@@ -69,6 +69,14 @@ impl Value {
         }
     }
 
+    pub fn as_int_cast(&self) -> Option<i64> {
+        match *self {
+            Value::Int(i) => Some(i),
+            Value::Float(f) => Some(f as i64),
+            _ => None,
+        }
+    }
+
     pub fn as_float(&self) -> Option<f64> {
         match *self {
             Value::Float(f) => Some(f),
