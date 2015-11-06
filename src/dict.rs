@@ -89,8 +89,11 @@ impl Default for Dictionary {
         dict.insert("len", Operation::Builtin(BuiltinWord::Length));
         dict.insert("map", Operation::Builtin(BuiltinWord::Map));
         dict.insert("mul", Operation::Builtin(BuiltinWord::Mul));
+        dict.insert("over", Operation::Builtin(BuiltinWord::Over));
         dict.insert("pop", Operation::Builtin(BuiltinWord::Pop));
         dict.insert("print", Operation::Builtin(BuiltinWord::Print));
+        dict.insert("repeat", Operation::Builtin(BuiltinWord::Repeat));
+        dict.insert("roll3", Operation::Builtin(BuiltinWord::Roll3));
         dict.insert("stdin", Operation::Builtin(BuiltinWord::Stdin));
         dict.insert("sub", Operation::Builtin(BuiltinWord::Sub));
         dict.insert("sum", Operation::Builtin(BuiltinWord::Sum));

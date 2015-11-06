@@ -31,3 +31,11 @@
     swap
     div
 } def
+
+,fib {
+    0 s
+    1 s
+    { d roll3 + } s
+    repeat
+    pop
+} def

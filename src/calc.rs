@@ -238,6 +238,33 @@ impl Calc {
                 self.data.push(b);
                 Ok(())
             }
+            Over => {
+                let a = try!(self.get_operand());
+                let b = try!(self.get_operand());
+                self.data.push(b.clone());
+                self.data.push(a);
+                self.data.push(b);
+                Ok(())
+            }
+            Repeat => {
+                let n = try!(self.get_int());
+                let block = try!(self.get_block());
+                for _ in 0..n {
+                    for word in &block {
+                        try!(self.run_one(word));
+                    }
+                }
+                Ok(())
+            }
+            Roll3 => {
+                let a = try!(self.get_operand());
+                let b = try!(self.get_operand());
+                let c = try!(self.get_operand());
+                self.data.push(b);
+                self.data.push(c);
+                self.data.push(a);
+                Ok(())
+            }
             Def => {
                 let block = try!(self.get_block());
                 let name = try!(self.get_word());
