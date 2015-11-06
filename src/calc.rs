@@ -36,7 +36,7 @@ pub type CalcResult<T> = Result<T, CalcError>;
 
 enum CalcState {
     Executing,
-    Reading(Vec<Word>),
+    Reading { block: Vec<Word>, level: u32 },
 }
 
 pub struct Calc {
@@ -49,6 +49,14 @@ impl Calc {
     pub fn new() -> Calc {
         Calc {
             dict: Default::default(),
+            data: Vec::new(),
+            state: CalcState::Executing,
+        }
+    }
+
+    fn sub_calc(&self) -> Calc {
+        Calc {
+            dict: dict::Dictionary::with_parent(&self.dict),
             data: Vec::new(),
             state: CalcState::Executing,
         }
@@ -76,19 +84,24 @@ impl Calc {
         trace!("executing {:?}", word);
         let state = mem::replace(&mut self.state, CalcState::Executing);
         match state {
-            CalcState::Reading(mut block) => {
-                if word == "]" {
+            CalcState::Reading{ mut block, mut level } => {
+                if word == "}" && level == 0 {
                     self.data.push(Value::Block(block));
                 } else {
                     block.push(word.to_string());
-                    self.state = CalcState::Reading(block);
+                    if word == "}" {
+                        level = level - 1;
+                    } else if word == "{" {
+                        level = level + 1;
+                    }
+                    self.state = CalcState::Reading { block: block, level: level };
                 }
             }
             CalcState::Executing => {
                 if word.starts_with(",") {
                     self.data.push(Value::QuotedWord(word[1..].to_string()));
-                } else if word == "[" {
-                    self.state = CalcState::Reading(Vec::new());
+                } else if word == "{" {
+                    self.state = CalcState::Reading { block: Vec::new(), level: 0 };
                 } else if let Some(op) = self.dict.lookup(word) {
                     match *op {
                         Operation::Builtin(builtin) => {
@@ -148,6 +161,45 @@ impl Calc {
                 let vec = stdin.lines().map(|r| Value::parse(&r.unwrap()).unwrap()).collect();
                 self.data.push(Value::Vector(vec));
                 Ok(())
+            }
+            Map => {
+                let block = try!(self.get_block());
+                let vec = try!(self.get_vector());
+                let mut result = Vec::with_capacity(vec.len());
+                for val in vec {
+                    let mut sub_calc = self.sub_calc();
+                    sub_calc.data.push(val);
+                    for word in &block {
+                        sub_calc.run_one(word);
+                    }
+                    if let Some(res) = sub_calc.data.pop() {
+                        result.push(res);
+                    } else {
+                        return Err(CalcError::BlockNoResult);
+                    }
+                }
+                self.data.push(Value::Vector(result));
+                Ok(())
+            }
+            Fold => {
+                let block = try!(self.get_block());
+                let init = try!(self.get_operand());
+                let values = try!(self.get_vector());
+
+                let mut sub_calc = self.sub_calc();
+                sub_calc.data.push(init);
+                for val in values {
+                    sub_calc.data.push(val);
+                    for word in &block {
+                        sub_calc.run_one(word);
+                    }
+                }
+                if let Some(res) = sub_calc.data.pop() {
+                    self.data.push(res);
+                    Ok(())
+                } else {
+                    Err(CalcError::BlockNoResult)
+                }
             }
             Sum => {
                 let mut sum = 0f64;
@@ -218,6 +270,10 @@ impl Calc {
 
     fn get_block(&mut self) -> CalcResult<Vec<Word>> {
         self.get_operand().and_then(|val| val.as_block().ok_or(CalcError::WrongTypeOperand))
+    }
+
+    fn get_vector(&mut self) -> CalcResult<Vec<Value>> {
+        self.get_operand().and_then(|val| val.as_vector().ok_or(CalcError::WrongTypeOperand))
     }
 
     fn get_word(&mut self) -> CalcResult<Word> {

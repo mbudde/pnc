@@ -1,3 +1,4 @@
+# This is the pnc prelude
 
 ,+ ,add   alias
 ,- ,sub   alias
@@ -7,19 +8,26 @@
 ,s ,swap  alias
 ,d ,dup   alias
 ,p ,print alias
+,– ,stdin alias
+,× ,mul   alias
+,· ,mul   alias
+,@ ,map   alias
 
-,peek [ dup print ] def
+,peek { dup print } def
 
-,++ [ 1 + ] def
-,-- [ 1 - ] def
+,++ { 1 + } def
+,-- { 1 - } def
 
-,1/ [ 1 swap div ] def
+,/+ { 0 { + } fold } def
+,/. { 1 { . } fold } def
 
-,avg [
+,1/ { 1 swap div } def
+
+,avg {
     dup
     len
     swap
     sum
     swap
     div
-] def
+} def

@@ -5,18 +5,20 @@ pub type Word = String;
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum BuiltinWord {
     Add,
-    Sub,
-    Mul,
-    Div,
-    Print,
-    Pop,
-    Duplicate,
-    Stdin,
-    Sum,
-    Length,
-    Swap,
-    Def,
     Alias,
+    Def,
+    Div,
+    Duplicate,
+    Fold,
+    Length,
+    Map,
+    Mul,
+    Pop,
+    Print,
+    Stdin,
+    Sub,
+    Sum,
+    Swap,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -71,9 +73,9 @@ impl Value {
         }
     }
 
-    pub fn as_vector(&self) -> Option<&Vec<Value>> {
-        match *self {
-            Value::Vector(ref v) => Some(v),
+    pub fn as_vector(self) -> Option<Vec<Value>> {
+        match self {
+            Value::Vector(v) => Some(v),
             _ => None,
         }
     }

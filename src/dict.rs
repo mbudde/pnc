@@ -81,18 +81,20 @@ impl Default for Dictionary {
     fn default() -> Dictionary {
         let mut dict = Dictionary::new();
         dict.insert("add", Operation::Builtin(BuiltinWord::Add));
-        dict.insert("sub", Operation::Builtin(BuiltinWord::Sub));
-        dict.insert("mul", Operation::Builtin(BuiltinWord::Mul));
-        dict.insert("div", Operation::Builtin(BuiltinWord::Div));
-        dict.insert("print", Operation::Builtin(BuiltinWord::Print));
-        dict.insert("pop", Operation::Builtin(BuiltinWord::Pop));
-        dict.insert("dup", Operation::Builtin(BuiltinWord::Duplicate));
-        dict.insert("stdin", Operation::Builtin(BuiltinWord::Stdin));
-        dict.insert("sum", Operation::Builtin(BuiltinWord::Sum));
-        dict.insert("len", Operation::Builtin(BuiltinWord::Length));
-        dict.insert("swap", Operation::Builtin(BuiltinWord::Swap));
-        dict.insert("def", Operation::Builtin(BuiltinWord::Def));
         dict.insert("alias", Operation::Builtin(BuiltinWord::Alias));
+        dict.insert("def", Operation::Builtin(BuiltinWord::Def));
+        dict.insert("div", Operation::Builtin(BuiltinWord::Div));
+        dict.insert("dup", Operation::Builtin(BuiltinWord::Duplicate));
+        dict.insert("fold", Operation::Builtin(BuiltinWord::Fold));
+        dict.insert("len", Operation::Builtin(BuiltinWord::Length));
+        dict.insert("map", Operation::Builtin(BuiltinWord::Map));
+        dict.insert("mul", Operation::Builtin(BuiltinWord::Mul));
+        dict.insert("pop", Operation::Builtin(BuiltinWord::Pop));
+        dict.insert("print", Operation::Builtin(BuiltinWord::Print));
+        dict.insert("stdin", Operation::Builtin(BuiltinWord::Stdin));
+        dict.insert("sub", Operation::Builtin(BuiltinWord::Sub));
+        dict.insert("sum", Operation::Builtin(BuiltinWord::Sum));
+        dict.insert("swap", Operation::Builtin(BuiltinWord::Swap));
         dict
     }
 }
