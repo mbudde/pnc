@@ -1,6 +1,5 @@
 use std::fmt;
 use std::error::Error;
-use std::mem;
 
 use words::{BuiltinWord, Operation, Value, Word};
 use dict;
@@ -35,8 +34,13 @@ impl fmt::Display for CalcError {
 pub type CalcResult<T> = Result<T, CalcError>;
 
 enum CalcState {
-    Reading { block: Vec<Word>, level: u32 },
-    Collecting { calc: Calc },
+    Reading {
+        block: Vec<Word>,
+        level: u32,
+    },
+    Collecting {
+        calc: Calc,
+    },
 }
 
 pub struct Calc {
@@ -93,7 +97,10 @@ impl Calc {
                     } else if word == "{" {
                         level = level + 1;
                     }
-                    self.state.push(CalcState::Reading { block: block, level: level });
+                    self.state.push(CalcState::Reading {
+                        block: block,
+                        level: level,
+                    });
                 }
             }
             Some(CalcState::Collecting { mut calc }) => {
@@ -110,7 +117,10 @@ impl Calc {
                 if word.starts_with(",") {
                     self.data.push(Value::QuotedWord(word[1..].to_string()));
                 } else if word == "{" {
-                    self.state.push(CalcState::Reading { block: Vec::new(), level: 0 });
+                    self.state.push(CalcState::Reading {
+                        block: Vec::new(),
+                        level: 0,
+                    });
                 } else if word == "[[" {
                     let mut calc = self.sub_calc();
                     let val = try!(self.get_operand());
@@ -174,7 +184,7 @@ impl Calc {
                 Ok(())
             }
             Stdin => {
-                use ::std::io::BufRead;
+                use std::io::BufRead;
                 let stdin = ::std::io::stdin();
                 let stdin = stdin.lock();
                 let vec = stdin.lines().map(|r| Value::parse(&r.unwrap()).unwrap()).collect();
@@ -303,6 +313,7 @@ impl Calc {
         self.data.pop().ok_or(CalcError::MissingOperand)
     }
 
+    #[allow(dead_code)]
     fn get_int(&mut self) -> CalcResult<i64> {
         self.get_operand().and_then(|val| val.as_int().ok_or(CalcError::WrongTypeOperand))
     }
@@ -311,6 +322,7 @@ impl Calc {
         self.get_operand().and_then(|val| val.as_int_cast().ok_or(CalcError::WrongTypeOperand))
     }
 
+    #[allow(dead_code)]
     fn get_float(&mut self) -> CalcResult<f64> {
         self.get_operand().and_then(|val| val.as_float().ok_or(CalcError::WrongTypeOperand))
     }
@@ -331,6 +343,7 @@ impl Calc {
         self.get_operand().and_then(|val| val.as_word().ok_or(CalcError::WrongTypeOperand))
     }
 
+    #[allow(dead_code)]
     fn perform_unary<F>(&mut self, f: F) -> CalcResult<()>
         where F: Fn(f64) -> f64
     {

@@ -2,7 +2,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use words::{Word, BuiltinWord, Operation, block};
+use words::{Word, BuiltinWord, Operation};
 
 #[derive(Debug, PartialEq, Eq)]
 enum Entry {
@@ -47,7 +47,7 @@ impl Dictionary {
             inner: Rc::new(RefCell::new(Inner {
                 map: HashMap::new(),
                 parent: None,
-            }))
+            })),
         }
     }
 
@@ -56,7 +56,7 @@ impl Dictionary {
             inner: Rc::new(RefCell::new(Inner {
                 map: HashMap::new(),
                 parent: Some(dict.inner.clone()),
-            }))
+            })),
         }
     }
 
@@ -121,9 +121,9 @@ mod tests {
                     Operation::Block(vec!["1", "+"].into_iter().map(|s| s.to_string()).collect()));
         assert_eq!(dict.lookup("incr"),
                    Some(Rc::new(Operation::Block(vec!["1", "+"]
-                                              .into_iter()
-                                              .map(|s| s.to_string())
-                                              .collect()))));
+                                                     .into_iter()
+                                                     .map(|s| s.to_string())
+                                                     .collect()))));
     }
 
     #[test]

@@ -1,4 +1,5 @@
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 extern crate env_logger;
 extern crate shlex;
 
@@ -30,7 +31,7 @@ fn main() {
         println!("Error: {}", err);
         std::process::exit(1);
     }
-    calc.print_stack();
+    calc.print_stack().unwrap();
 }
 
 #[cfg(test)]

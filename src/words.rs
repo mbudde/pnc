@@ -30,12 +30,9 @@ pub enum Operation {
     Block(Vec<Word>),
 }
 
-pub fn block<'a, 'b>(words: &'a [&'b str]) -> Operation {
-    Operation::Block(words.into_iter().map(|s| s.to_string()).collect())
-}
-
 #[derive(Debug, Clone)]
 pub enum Value {
+    #[allow(dead_code)]
     Bool(bool),
     Int(i64),
     Float(f64),
@@ -55,6 +52,7 @@ impl Value {
         }
     }
 
+    #[allow(dead_code)]
     pub fn as_bool(&self) -> Option<bool> {
         match *self {
             Value::Bool(b) => Some(b),
