@@ -45,3 +45,5 @@
 } def
 
 ,! { seq /. } def
+
+,choose { over over - ! s ! . s ! s / } def
