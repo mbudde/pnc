@@ -1,5 +1,5 @@
 [package]
-name = "pnc2"
+name = "pnc"
 version = "0.1.0"
 authors = ["Michael Budde <mbudde@gmail.com>"]
 
