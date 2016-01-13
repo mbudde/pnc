@@ -117,8 +117,8 @@ impl fmt::Display for Value {
         use self::Value::*;
         match *self {
             Bool(v) => v.fmt(f),
-            Int(v) => v.fmt(f),
-            Float(v) => v.fmt(f),
+            Int(v) => write!(f, "{}", v),
+            Float(v) => write!(f, "{}", v),
             Vector(ref v) => {
                 try!(write!(f, "["));
                 let mut iter = v.into_iter();

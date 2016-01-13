@@ -156,9 +156,9 @@ impl Calc {
     fn run_builtin(&mut self, word: BuiltinWord) -> CalcResult<()> {
         use words::BuiltinWord::*;
         match word {
-            Add => self.perform_binop(::std::ops::Add::add),
-            Sub => self.perform_binop(::std::ops::Sub::sub),
-            Mul => self.perform_binop(::std::ops::Mul::mul),
+            Add => self.perform_binop(::std::ops::Add::add, ::std::ops::Add::add),
+            Sub => self.perform_binop(::std::ops::Sub::sub, ::std::ops::Sub::sub),
+            Mul => self.perform_binop(::std::ops::Mul::mul, ::std::ops::Mul::mul),
             Div => {
                 let y = try!(self.get_float_cast());
                 let x = try!(self.get_float_cast());
@@ -352,12 +352,19 @@ impl Calc {
         Ok(())
     }
 
-    fn perform_binop<F>(&mut self, f: F) -> CalcResult<()>
-        where F: Fn(f64, f64) -> f64
+    fn perform_binop<F, G>(&mut self, f: F, g: G) -> CalcResult<()>
+        where F: Fn(f64, f64) -> f64,
+              G: Fn(i64, i64) -> i64
     {
-        let y = try!(self.get_float_cast());
-        let x = try!(self.get_float_cast());
-        self.data.push(Value::Float(f(x, y)));
+        let y = try!(self.get_operand());
+        let x = try!(self.get_operand());
+        match (x, y) {
+            (Value::Int(x),   Value::Int(y))   => self.data.push(Value::Int(g(x, y))),
+            (Value::Float(x), Value::Float(y)) => self.data.push(Value::Float(f(x, y))),
+            (Value::Int(x),   Value::Float(y)) => self.data.push(Value::Float(f(x as f64, y))),
+            (Value::Float(x), Value::Int(y))   => self.data.push(Value::Float(f(x, y as f64))),
+            (_, _) => return Err(CalcError::WrongTypeOperand)
+        }
         Ok(())
     }
 }
