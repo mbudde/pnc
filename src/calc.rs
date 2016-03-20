@@ -1,4 +1,5 @@
 use std::fmt;
+
 use std::error::Error;
 use std::cmp::Ordering;
 
@@ -50,6 +51,7 @@ pub struct Calc {
     state: Vec<CalcState>,
 }
 
+#[allow(new_without_default)]
 impl Calc {
     pub fn new() -> Calc {
         Calc {
@@ -74,7 +76,7 @@ impl Calc {
         Ok(())
     }
 
-    pub fn run<'a, I, T>(&mut self, iter: I) -> CalcResult<()>
+    pub fn run<I, T>(&mut self, iter: I) -> CalcResult<()>
         where I: Iterator<Item = T>,
               T: AsRef<str>
     {
@@ -92,7 +94,7 @@ impl Calc {
                 if word == "}" && level == 0 {
                     self.data.push(Value::Block(block));
                 } else {
-                    block.push(word.to_string());
+                    block.push(word.to_owned());
                     if word == "}" {
                         level = level - 1;
                     } else if word == "{" {
@@ -135,8 +137,8 @@ impl Calc {
             }
             None => {
                 trace!("executing {}", word);
-                if word.starts_with(",") {
-                    self.data.push(Value::QuotedWord(word[1..].to_string()));
+                if word.starts_with(',') {
+                    self.data.push(Value::QuotedWord(word[1..].to_owned()));
                 } else if word == "{" {
                     self.state.push(CalcState::Reading {
                         block: Vec::new(),
@@ -168,6 +170,7 @@ impl Calc {
         Ok(())
     }
 
+    #[allow(cyclomatic_complexity)]
     fn run_builtin(&mut self, word: BuiltinWord) -> CalcResult<()> {
         use words::BuiltinWord::*;
         match word {
@@ -373,15 +376,15 @@ impl Calc {
     }
 
     fn get_block(&mut self) -> CalcResult<Vec<Word>> {
-        self.get_operand().and_then(|val| val.as_block().ok_or(CalcError::WrongTypeOperand))
+        self.get_operand().and_then(|val| val.into_block().ok_or(CalcError::WrongTypeOperand))
     }
 
     fn get_vector(&mut self) -> CalcResult<Vec<Value>> {
-        self.get_operand().and_then(|val| val.as_vector().ok_or(CalcError::WrongTypeOperand))
+        self.get_operand().and_then(|val| val.into_vector().ok_or(CalcError::WrongTypeOperand))
     }
 
     fn get_word(&mut self) -> CalcResult<Word> {
-        self.get_operand().and_then(|val| val.as_word().ok_or(CalcError::WrongTypeOperand))
+        self.get_operand().and_then(|val| val.into_word().ok_or(CalcError::WrongTypeOperand))
     }
 
     #[allow(dead_code)]

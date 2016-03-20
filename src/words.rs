@@ -89,7 +89,7 @@ impl Value {
         }
     }
 
-    pub fn as_vector(self) -> Option<Vec<Value>> {
+    pub fn into_vector(self) -> Option<Vec<Value>> {
         match self {
             Value::Vector(v) => Some(v),
             _ => None,
@@ -104,14 +104,14 @@ impl Value {
         }
     }
 
-    pub fn as_block(self) -> Option<Vec<Word>> {
+    pub fn into_block(self) -> Option<Vec<Word>> {
         match self {
             Value::Block(b) => Some(b),
             _ => None,
         }
     }
 
-    pub fn as_word(self) -> Option<Word> {
+    pub fn into_word(self) -> Option<Word> {
         match self {
             Value::QuotedWord(w) => Some(w),
             _ => None,
