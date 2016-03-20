@@ -105,10 +105,30 @@ impl Calc {
             }
             Some(CalcState::Collecting { mut calc }) => {
                 trace!("collecting {}", word);
-                if word == "]" || word == "]]" {
+                if word == "]" {
                     self.data.push(Value::Vector(calc.data));
                 } else {
-                    try!(calc.run_one(word));
+                    if let Some(op) = self.dict.lookup(word) {
+                        if let Operation::Builtin(::words::BuiltinWord::Arg) = *op {
+                            match self.state.pop() {
+                                Some(CalcState::Collecting { calc: mut parent }) => {
+                                    calc.data.push(parent.data.pop().unwrap());
+                                    self.state.push(CalcState::Collecting { calc: parent });
+                                }
+                                Some(CalcState::Reading { block, level }) => {
+                                    calc.data.push(self.data.pop().unwrap());
+                                    self.state.push(CalcState::Reading { block: block, level: level });
+                                }
+                                _ => {
+                                    calc.data.push(self.data.pop().unwrap());
+                                }
+                            }
+                        } else {
+                            try!(calc.run_one(word));
+                        }
+                    } else {
+                        try!(calc.run_one(word));
+                    }
                     self.state.push(CalcState::Collecting { calc: calc });
                 }
             }
@@ -121,12 +141,6 @@ impl Calc {
                         block: Vec::new(),
                         level: 0,
                     });
-                } else if word == "[[" {
-                    let mut calc = self.sub_calc();
-                    let val = try!(self.get_operand());
-                    calc.data.push(val);
-                    let state = CalcState::Collecting { calc: calc };
-                    self.state.push(state);
                 } else if word == "[" {
                     let state = CalcState::Collecting { calc: self.sub_calc() };
                     self.state.push(state);
@@ -304,6 +318,9 @@ impl Calc {
                 let val = try!(self.get_word());
                 let name = try!(self.get_word());
                 self.dict.insert_alias(name, val);
+                Ok(())
+            }
+            Arg => {
                 Ok(())
             }
         }

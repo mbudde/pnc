@@ -98,6 +98,7 @@ impl Default for Dictionary {
         dict.insert("sub", Operation::Builtin(BuiltinWord::Sub));
         dict.insert("sum", Operation::Builtin(BuiltinWord::Sum));
         dict.insert("swap", Operation::Builtin(BuiltinWord::Swap));
+        dict.insert("arg", Operation::Builtin(BuiltinWord::Arg));
         dict
     }
 }

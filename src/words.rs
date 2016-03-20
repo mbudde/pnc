@@ -22,6 +22,7 @@ pub enum BuiltinWord {
     Sub,
     Sum,
     Swap,
+    Arg,
 }
 
 #[derive(Debug, PartialEq, Eq)]
