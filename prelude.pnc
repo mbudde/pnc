@@ -23,6 +23,14 @@
 
 ,1/ { 1 swap div } def
 
+,abs { dup sign . } def
+,sign { 0 cmp } def
+,eq { cmp abs 1 swap - } def
+,gt { cmp 0 max } def
+,ge { -- cmp 0 max } def
+,lt { swap cmp 0 max } def
+,le { ++ swap cmp 0 max } def
+
 ,avg {
     dup
     len

@@ -23,6 +23,12 @@ pub enum BuiltinWord {
     Sum,
     Swap,
     Arg,
+
+    Max,
+    Min,
+
+    // Comparions
+    Cmp,
 }
 
 #[derive(Debug, PartialEq, Eq)]

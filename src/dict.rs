@@ -99,6 +99,11 @@ impl Default for Dictionary {
         dict.insert("sum", Operation::Builtin(BuiltinWord::Sum));
         dict.insert("swap", Operation::Builtin(BuiltinWord::Swap));
         dict.insert("arg", Operation::Builtin(BuiltinWord::Arg));
+
+        dict.insert("min", Operation::Builtin(BuiltinWord::Min));
+        dict.insert("max", Operation::Builtin(BuiltinWord::Max));
+
+        dict.insert("cmp", Operation::Builtin(BuiltinWord::Cmp));
         dict
     }
 }

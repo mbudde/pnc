@@ -1,5 +1,6 @@
 use std::fmt;
 use std::error::Error;
+use std::cmp::Ordering;
 
 use words::{BuiltinWord, Operation, Value, Word};
 use dict;
@@ -321,6 +322,29 @@ impl Calc {
                 Ok(())
             }
             Arg => {
+                Ok(())
+            }
+            Min => {
+                let a = try!(self.get_int());
+                let b = try!(self.get_int());
+                self.data.push(Value::Int(::std::cmp::min(a, b)));
+                Ok(())
+            }
+            Max => {
+                let a = try!(self.get_int());
+                let b = try!(self.get_int());
+                self.data.push(Value::Int(::std::cmp::max(a, b)));
+                Ok(())
+            }
+            Cmp => {
+                let a = try!(self.get_int());
+                let b = try!(self.get_int());
+                let cmp = match b.cmp(&a) {
+                    Ordering::Less => -1,
+                    Ordering::Equal => 0,
+                    Ordering::Greater => 1,
+                };
+                self.data.push(Value::Int(cmp));
                 Ok(())
             }
         }
