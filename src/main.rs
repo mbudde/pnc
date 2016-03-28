@@ -12,7 +12,7 @@ extern crate clap;
 use std::io::prelude::*;
 use std::fs::File;
 
-use clap::App;
+use clap::{App, Arg};
 
 mod calc;
 mod dict;
@@ -25,7 +25,7 @@ fn main() {
     let args = App::new("Postfix Notation Calculator")
         .version("0.1")
         .author("Michael Budde")
-        .arg_from_usage("[WORD]... 'Words to execute'")
+        .arg(Arg::from_usage("[WORD]... 'Words to execute'").use_delimiter(false))
         .arg_from_usage("-q --quiet 'Do not print stack before exiting'")
         .arg_from_usage("-l --list 'List all defined words'")
         .get_matches();
