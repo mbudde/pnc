@@ -124,7 +124,7 @@ mod tests {
         assert_eq!(dict.lookup("plus"),
                    Some(Rc::new(Operation::Builtin(BuiltinWord::Add))));
         dict.insert("incr",
-                    Operation::Block(vec!["1", "+"].into_iter().map(|s| s.to_string()).collect()));
+                    Operation::Block(vec!["1", "+"].into_iter().map(|s| s.to_owned()).collect()));
         assert_eq!(dict.lookup("incr"),
                    Some(Rc::new(Operation::Block(vec!["1", "+"]
                                                      .into_iter()
