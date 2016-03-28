@@ -12,7 +12,7 @@ pub enum CalcError {
     MissingOperand,
     WrongTypeOperand,
     BlockNoResult,
-    WordParseError,
+    WordParseError(Word),
 }
 
 impl Error for CalcError {
@@ -28,7 +28,7 @@ impl fmt::Display for CalcError {
             CalcError::MissingOperand => write!(f, "Operation needs an operand but stack is empty"),
             CalcError::WrongTypeOperand => write!(f, "Operand has a wrong type"),
             CalcError::BlockNoResult => write!(f, "Block left no result on the stack"),
-            CalcError::WordParseError => write!(f, "Could not parse word as number or operation"),
+            CalcError::WordParseError(ref word) => write!(f, "Could not parse word '{}' as number or operation", word),
         }
     }
 }
@@ -167,8 +167,7 @@ impl Calc {
                     if let Some(val) = Value::parse(word) {
                         self.data.push(val);
                     } else {
-                        println!("{}", word);
-                        return Err(CalcError::WordParseError);
+                        return Err(CalcError::WordParseError(word.to_owned()));
                     }
                 }
             }
