@@ -7,9 +7,12 @@
 extern crate log;
 extern crate env_logger;
 extern crate shlex;
+extern crate clap;
 
 use std::io::prelude::*;
 use std::fs::File;
+
+use clap::App;
 
 mod calc;
 mod dict;
@@ -18,6 +21,14 @@ mod words;
 
 fn main() {
     env_logger::init().unwrap();
+
+    let args = App::new("Postfix Notation Calculator")
+        .version("0.1")
+        .author("Michael Budde")
+        .arg_from_usage("[WORD]... 'Words to execute'")
+        .arg_from_usage("-q --quiet 'Do not print stack before exiting'")
+        .get_matches();
+
     let mut calc = calc::Calc::new();
 
     let builtin_prelude = include_str!("../prelude.pnc");
@@ -41,13 +52,15 @@ fn main() {
         }
     }
 
-    let mut args = std::env::args();
-    args.next();
-    if let Err(err) = calc.run(args) {
-        println!("Error: {}", err);
-        std::process::exit(1);
+    if let Some(words) = args.values_of("WORD") {
+        if let Err(err) = calc.run(words) {
+            println!("Error: {}", err);
+            std::process::exit(1);
+        }
     }
-    calc.print_stack().unwrap();
+    if !args.is_present("quiet") {
+        calc.print_stack().unwrap();
+    }
 }
 
 #[cfg(test)]
