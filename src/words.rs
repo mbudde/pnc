@@ -4,31 +4,39 @@ pub type Word = String;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum BuiltinWord {
+    // Arithmetic
     Add,
-    Alias,
-    Def,
-    Div,
-    Duplicate,
-    Fold,
-    Length,
-    Map,
-    Mul,
-    Over,
-    Pop,
-    Print,
-    Repeat,
-    Roll3,
-    Stdin,
     Sub,
+    Mul,
+    Div,
+    Fold,
+    Map,
     Sum,
-    Swap,
-    Arg,
+    Repeat,
 
+    // Comparisons
     Max,
     Min,
-
-    // Comparions
     Cmp,
+
+    // Blocks
+    Alias,
+    Def,
+    Arg,
+
+    // Stack manipulation
+    Swap,
+    Duplicate,
+    Pop,
+    Over,
+    Roll3,
+
+    // IO
+    Print,
+    Stdin,
+
+    // Vectors
+    Length,
 }
 
 #[derive(Debug, PartialEq, Eq)]
