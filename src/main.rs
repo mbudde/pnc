@@ -12,7 +12,7 @@ extern crate clap;
 use std::io::prelude::*;
 use std::fs::File;
 
-use clap::{App, Arg};
+use clap::{App, AppSettings, Arg};
 
 mod calc;
 mod dict;
@@ -25,6 +25,9 @@ fn main() {
     let args = App::new("Postfix Notation Calculator")
         .version("0.1")
         .author("Michael Budde")
+        .setting(AppSettings::TrailingVarArg)
+        .setting(AppSettings::AllowLeadingHyphen)
+        .setting(AppSettings::UnifiedHelpMessage)
         .arg(Arg::from_usage("[WORD]... 'Words to execute'").use_delimiter(false))
         .arg_from_usage("-q --quiet 'Do not print stack before exiting'")
         .arg_from_usage("-l --list 'List all defined words'")
