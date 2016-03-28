@@ -1,7 +1,7 @@
 
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeSet};
 use words::{Word, BuiltinWord, Operation};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -34,6 +34,24 @@ impl Inner {
                 self.parent.as_ref().and_then(|p| p.borrow().lookup(word))
             }
         }
+    }
+
+    fn available_words(&self) -> BTreeSet<Word> {
+        let mut words = BTreeSet::new();
+        for (word, entry) in &self.map {
+            match *entry {
+                Entry::Alias(ref alias) => {
+                    words.insert(format!("{} (alias of {})", word, alias).to_owned());
+                }
+                _ => { words.insert(word.clone()); }
+            }
+        }
+        if let Some(ref parent) = self.parent {
+            for word in parent.borrow().available_words() {
+                words.insert(word);
+            }
+        }
+        words
     }
 }
 
@@ -74,6 +92,10 @@ impl Dictionary {
 
     pub fn lookup(&self, word: &str) -> Option<Rc<Operation>> {
         self.inner.borrow().lookup(word)
+    }
+
+    pub fn available_words(&self) -> BTreeSet<Word> {
+        self.inner.borrow().available_words()
     }
 }
 

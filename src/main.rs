@@ -27,6 +27,7 @@ fn main() {
         .author("Michael Budde")
         .arg_from_usage("[WORD]... 'Words to execute'")
         .arg_from_usage("-q --quiet 'Do not print stack before exiting'")
+        .arg_from_usage("-l --list 'List all defined words'")
         .get_matches();
 
     let mut calc = calc::Calc::new();
@@ -52,16 +53,21 @@ fn main() {
         }
     }
 
-    if let Some(words) = args.values_of("WORD") {
-        if let Err(err) = calc.run(words) {
-            println!("Error: {}", err);
-            std::process::exit(1);
+    if args.is_present("list") {
+        calc.list_available_words();
+    } else {
+        if let Some(words) = args.values_of("WORD") {
+            if let Err(err) = calc.run(words) {
+                println!("Error: {}", err);
+                std::process::exit(1);
+            }
+        }
+        if !args.is_present("quiet") {
+            calc.print_stack().unwrap();
         }
     }
-    if !args.is_present("quiet") {
-        calc.print_stack().unwrap();
-    }
 }
+
 
 #[cfg(test)]
 mod tests {

@@ -69,6 +69,12 @@ impl Calc {
         }
     }
 
+    pub fn list_available_words(&self) {
+        for word in self.dict.available_words() {
+            println!("{}", word);
+        }
+    }
+
     pub fn print_stack(&self) -> CalcResult<()> {
         for val in &self.data {
             println!("{}", val);
