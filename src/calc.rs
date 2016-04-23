@@ -93,6 +93,7 @@ impl Calc {
         Ok(())
     }
 
+    #[allow(cyclomatic_complexity)]
     pub fn run_one(&mut self, word: &str) -> CalcResult<()> {
         match self.state.pop() {
             Some(CalcState::Reading { mut block, mut level }) => {
@@ -121,15 +122,15 @@ impl Calc {
                         if let Operation::Builtin(::words::BuiltinWord::Arg) = *op {
                             match self.state.pop() {
                                 Some(CalcState::Collecting { calc: mut parent }) => {
-                                    calc.data.push(parent.data.pop().unwrap());
+                                    calc.data.push(try!(parent.data.pop().ok_or(CalcError::MissingOperand)));
                                     self.state.push(CalcState::Collecting { calc: parent });
                                 }
                                 Some(CalcState::Reading { block, level }) => {
-                                    calc.data.push(self.data.pop().unwrap());
+                                    calc.data.push(try!(self.data.pop().ok_or(CalcError::MissingOperand)));
                                     self.state.push(CalcState::Reading { block: block, level: level });
                                 }
-                                _ => {
-                                    calc.data.push(self.data.pop().unwrap());
+                                None => {
+                                    calc.data.push(try!(self.data.pop().ok_or(CalcError::MissingOperand)));
                                 }
                             }
                         } else {
