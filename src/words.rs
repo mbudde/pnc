@@ -58,6 +58,7 @@ pub enum Value {
 
 impl Value {
     pub fn parse(s: &str) -> Option<Value> {
+        let s = s.trim();
         if let Ok(num) = s.parse::<i64>() {
             Some(Value::Int(num))
         } else if let Ok(num) = s.parse::<f64>() {

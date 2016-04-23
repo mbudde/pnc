@@ -12,6 +12,7 @@ pub enum CalcError {
     MissingOperand,
     WrongTypeOperand,
     BlockNoResult,
+    NumParseError(String),
     WordParseError(Word),
 }
 
@@ -28,6 +29,7 @@ impl fmt::Display for CalcError {
             CalcError::MissingOperand => write!(f, "Operation needs an operand but stack is empty"),
             CalcError::WrongTypeOperand => write!(f, "Operand has a wrong type"),
             CalcError::BlockNoResult => write!(f, "Block left no result on the stack"),
+            CalcError::NumParseError(ref line) => write!(f, "Could not parse '{}' as number", line),
             CalcError::WordParseError(ref word) => write!(f, "Could not parse word '{}' as number or operation", word),
         }
     }
@@ -211,7 +213,15 @@ impl Calc {
                 use std::io::BufRead;
                 let stdin = ::std::io::stdin();
                 let stdin = stdin.lock();
-                let vec = stdin.lines().map(|r| Value::parse(&r.unwrap()).unwrap()).collect();
+                let mut vec = vec![];
+                for line in stdin.lines() {
+                    let line = line.unwrap();
+                    if let Some(val) = Value::parse(&line) {
+                        vec.push(val);
+                    } else {
+                        return Err(CalcError::NumParseError(line));
+                    }
+                }
                 self.data.push(Value::Vector(vec));
                 Ok(())
             }
