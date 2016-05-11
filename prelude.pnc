@@ -61,3 +61,11 @@
 ,! { seq /. } def
 
 ,choose { over over - ! s ! . s ! s / } def
+
+
+,vmax {
+    0 { max } fold
+} def
+,vmin {
+    0 { min } fold
+} def
