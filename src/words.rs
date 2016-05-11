@@ -11,6 +11,7 @@ pub enum BuiltinWord {
     Div,
     Fold,
     Map,
+    Filter,
     Sum,
     Repeat,
 
@@ -22,6 +23,7 @@ pub enum BuiltinWord {
     // Blocks
     Alias,
     Def,
+    Apply,
     Arg,
 
     // Stack manipulation

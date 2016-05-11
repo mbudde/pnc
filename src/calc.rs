@@ -218,8 +218,6 @@ impl Calc {
                     let line = line.unwrap();
                     if let Some(val) = Value::parse(&line) {
                         vec.push(val);
-                    } else {
-                        return Err(CalcError::NumParseError(line));
                     }
                 }
                 self.data.push(Value::Vector(vec));
@@ -263,6 +261,30 @@ impl Calc {
                 } else {
                     Err(CalcError::BlockNoResult)
                 }
+            }
+            Filter => {
+                let block = try!(self.get_block());
+                let values = try!(self.get_vector());
+                let mut result = Vec::with_capacity(values.len());
+                for val in values {
+                    let mut sub_calc = self.sub_calc();
+                    sub_calc.data.push(val.clone());
+                    for word in &block {
+                        try!(sub_calc.run_one(word));
+                    }
+                    if let Some(res) = sub_calc.data.pop() {
+                        match res {
+                            Value::Int(x) if x != 0 => { result.push(val); }
+                            Value::Bool(true) => { result.push(val); }
+                            _ => {}
+                        }
+                    } else {
+                        return Err(CalcError::BlockNoResult);
+                    }
+                }
+                result.shrink_to_fit();
+                self.data.push(Value::Vector(result));
+                Ok(())
             }
             Sum => {
                 let mut sum = 0f64;
@@ -338,6 +360,21 @@ impl Calc {
                 let val = try!(self.get_word());
                 let name = try!(self.get_word());
                 self.dict.insert_alias(name, val);
+                Ok(())
+            }
+            Apply => {
+                let op = try!(self.get_operand());
+                match op {
+                    Value::QuotedWord(word) => {
+                        try!(self.run_one(&word));
+                    }
+                    Value::Block(block) => {
+                        for word in &block {
+                            try!(self.run_one(word));
+                        }
+                    }
+                    _ => {}
+                }
                 Ok(())
             }
             Arg => {

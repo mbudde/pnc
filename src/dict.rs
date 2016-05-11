@@ -102,6 +102,7 @@ impl Dictionary {
 impl Default for Dictionary {
     fn default() -> Dictionary {
         let mut dict = Dictionary::new();
+        dict.insert("apply", Operation::Builtin(BuiltinWord::Apply));
         dict.insert("add", Operation::Builtin(BuiltinWord::Add));
         dict.insert("alias", Operation::Builtin(BuiltinWord::Alias));
         dict.insert("def", Operation::Builtin(BuiltinWord::Def));
@@ -110,6 +111,7 @@ impl Default for Dictionary {
         dict.insert("fold", Operation::Builtin(BuiltinWord::Fold));
         dict.insert("len", Operation::Builtin(BuiltinWord::Length));
         dict.insert("map", Operation::Builtin(BuiltinWord::Map));
+        dict.insert("filter", Operation::Builtin(BuiltinWord::Filter));
         dict.insert("mul", Operation::Builtin(BuiltinWord::Mul));
         dict.insert("over", Operation::Builtin(BuiltinWord::Over));
         dict.insert("pop", Operation::Builtin(BuiltinWord::Pop));
