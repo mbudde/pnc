@@ -30,7 +30,7 @@ fn main() {
     let mut calc = calc::Calc::new();
 
     let builtin_prelude = include_str!("../prelude.pnc");
-    let prelude_words = shlex::Shlex::new(&builtin_prelude);
+    let prelude_words = shlex::Shlex::new(builtin_prelude);
     if let Err(err) = calc.run(prelude_words) {
         println!("Error while executing builtin prelude: {}", err);
         std::process::exit(1);
