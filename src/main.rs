@@ -2,19 +2,28 @@
 extern crate env_logger;
 extern crate shlex;
 extern crate clap;
+#[macro_use]
+extern crate error_chain;
 
 use std::io::prelude::*;
 use std::fs::File;
 
 use clap::{App, AppSettings, Arg};
 
+use errors::*;
+
+mod errors {
+    error_chain! { }
+}
+
 mod calc;
 mod dict;
 mod words;
 
+quick_main!(run);
 
-fn main() {
-    env_logger::init().unwrap();
+fn run() -> Result<()> {
+    env_logger::init().chain_err(|| "failed to setup logging")?;
 
     let args = App::new("Postfix Notation Calculator")
         .version("0.1")
@@ -31,22 +40,17 @@ fn main() {
 
     let builtin_prelude = include_str!("../prelude.pnc");
     let prelude_words = shlex::Shlex::new(builtin_prelude);
-    if let Err(err) = calc.run(prelude_words) {
-        println!("Error while executing builtin prelude: {}", err);
-        std::process::exit(1);
-    }
+    calc.run(prelude_words).chain_err(|| "could not execute builtin prelude")?;
 
     if let Some(mut p) = std::env::home_dir() {
         p.push(".prelude.pnc");
         if let Ok(mut prelude_file) = File::open(p) {
             let mut prelude = String::new();
-            prelude_file.read_to_string(&mut prelude).unwrap();
+            prelude_file.read_to_string(&mut prelude)
+                .chain_err(|| "could not read user prelude")?;
 
             let prelude_words = shlex::Shlex::new(&prelude);
-            if let Err(err) = calc.run(prelude_words) {
-                println!("Error while executing prelude: {}", err);
-                std::process::exit(1);
-            }
+            calc.run(prelude_words).chain_err(|| "could not execute user prelude")?;
         }
     }
 
@@ -54,15 +58,13 @@ fn main() {
         calc.list_available_words();
     } else {
         if let Some(words) = args.values_of("WORD") {
-            if let Err(err) = calc.run(words) {
-                println!("Error: {}", err);
-                std::process::exit(1);
-            }
+            calc.run(words).chain_err(|| "could not execute words in arguments")?;
         }
         if !args.is_present("quiet") {
-            calc.print_stack().unwrap();
+            calc.print_stack().chain_err(|| "failed to print stack")?;
         }
     }
+    Ok(())
 }
 
 
