@@ -27,7 +27,7 @@ fn run() -> Result<()> {
 
     let args = App::new("Postfix Notation Calculator")
         .version("0.1")
-        .author("Michael Budde")
+        .author("Michael Budde <mbudde@gmail.com>")
         .setting(AppSettings::TrailingVarArg)
         .setting(AppSettings::AllowLeadingHyphen)
         .setting(AppSettings::UnifiedHelpMessage)
