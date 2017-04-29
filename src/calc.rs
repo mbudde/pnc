@@ -39,8 +39,12 @@ impl Calc {
     }
 
     pub fn list_available_words(&self) {
-        for word in self.dict.available_words() {
-            println!("{}", word);
+        for (word, aliases) in self.dict.available_words() {
+            if aliases.is_empty() {
+                println!("{}", word);
+            } else {
+                println!("{} (aliases: {})", word, aliases.join(", "));
+            }
         }
     }
 

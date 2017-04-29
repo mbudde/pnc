@@ -1,7 +1,7 @@
 
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::collections::{HashMap, BTreeSet};
+use std::collections::{HashMap, BTreeMap};
 use words::{Word, BuiltinWord, Operation};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -36,19 +36,30 @@ impl Inner {
         }
     }
 
-    fn available_words(&self) -> BTreeSet<Word> {
-        let mut words = BTreeSet::new();
+    fn available_words(&self) -> BTreeMap<Word, Vec<Word>> {
+        let mut words = BTreeMap::new();
         for (word, entry) in &self.map {
             match *entry {
                 Entry::Alias(ref alias) => {
-                    words.insert(format!("{} (alias of {})", word, alias).to_owned());
+                    words.entry(alias.clone()).or_insert_with(|| vec![])
+                        .push(word.clone());
                 }
-                _ => { words.insert(word.clone()); }
+                _ => {
+                    words.entry(word.clone()).or_insert_with(|| vec![]);
+                }
             }
         }
         if let Some(ref parent) = self.parent {
-            for word in parent.borrow().available_words() {
-                words.insert(word);
+            for (word, aliases) in parent.borrow().available_words() {
+                use std::collections::btree_map::Entry::*;
+                match words.entry(word) {
+                    Vacant(entry) => {
+                        entry.insert(aliases);
+                    }
+                    Occupied(mut entry) => {
+                        entry.get_mut().extend(aliases);
+                    }
+                }
             }
         }
         words
@@ -94,7 +105,7 @@ impl Dictionary {
         self.inner.borrow().lookup(word)
     }
 
-    pub fn available_words(&self) -> BTreeSet<Word> {
+    pub fn available_words(&self) -> BTreeMap<Word, Vec<Word>> {
         self.inner.borrow().available_words()
     }
 }
