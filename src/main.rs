@@ -13,7 +13,28 @@ use clap::{App, AppSettings, Arg};
 use errors::*;
 
 mod errors {
-    error_chain! { }
+    use words::Word;
+    error_chain! {
+
+        errors {
+            DivisionByZero {
+                description("division by zero")
+            }
+            MissingOperand {
+                description("operation needs an operand but stack is empty")
+            }
+            WrongTypeOperand {
+                description("operand has a wrong type")
+            }
+            BlockNoResult {
+                description("block left no result on the stack")
+            }
+            WordParseError(word: Word) {
+                description("could not parse word as number or operation")
+                display("could not parse word '{}' as number or operation", word)
+            }
+        }
+    }
 }
 
 mod calc;

@@ -1,41 +1,8 @@
-use std::fmt;
-
-use std::error::Error;
 use std::cmp::Ordering;
 
+use errors::*;
 use words::{BuiltinWord, Operation, Value, Word};
 use dict;
-
-#[derive(Debug)]
-pub enum CalcError {
-    DivisionByZero,
-    MissingOperand,
-    WrongTypeOperand,
-    BlockNoResult,
-    NumParseError(String),
-    WordParseError(Word),
-}
-
-impl Error for CalcError {
-    fn description(&self) -> &str {
-        "A calculator error occured"
-    }
-}
-
-impl fmt::Display for CalcError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            CalcError::DivisionByZero => write!(f, "Division by zero"),
-            CalcError::MissingOperand => write!(f, "Operation needs an operand but stack is empty"),
-            CalcError::WrongTypeOperand => write!(f, "Operand has a wrong type"),
-            CalcError::BlockNoResult => write!(f, "Block left no result on the stack"),
-            CalcError::NumParseError(ref line) => write!(f, "Could not parse '{}' as number", line),
-            CalcError::WordParseError(ref word) => write!(f, "Could not parse word '{}' as number or operation", word),
-        }
-    }
-}
-
-pub type CalcResult<T> = Result<T, CalcError>;
 
 enum CalcState {
     Reading {
@@ -77,14 +44,14 @@ impl Calc {
         }
     }
 
-    pub fn print_stack(&self) -> CalcResult<()> {
+    pub fn print_stack(&self) -> Result<()> {
         for val in &self.data {
             println!("{}", val);
         }
         Ok(())
     }
 
-    pub fn run<I, T>(&mut self, iter: I) -> CalcResult<()>
+    pub fn run<I, T>(&mut self, iter: I) -> Result<()>
         where I: Iterator<Item = T>,
               T: AsRef<str>
     {
@@ -96,7 +63,7 @@ impl Calc {
     }
 
     #[allow(cyclomatic_complexity)]
-    pub fn run_one(&mut self, word: &str) -> CalcResult<()> {
+    pub fn run_one(&mut self, word: &str) -> Result<()> {
         match self.state.pop() {
             Some(CalcState::Reading { mut block, mut level }) => {
                 trace!("reading {}", word);
@@ -124,15 +91,21 @@ impl Calc {
                         if let Operation::Builtin(::words::BuiltinWord::Arg) = *op {
                             match self.state.pop() {
                                 Some(CalcState::Collecting { calc: mut parent }) => {
-                                    calc.data.push(try!(parent.data.pop().ok_or(CalcError::MissingOperand)));
+                                    let val = parent.data.pop()
+                                        .ok_or::<Error>(ErrorKind::MissingOperand.into())?;
+                                    calc.data.push(val);
                                     self.state.push(CalcState::Collecting { calc: parent });
                                 }
                                 Some(CalcState::Reading { block, level }) => {
-                                    calc.data.push(try!(self.data.pop().ok_or(CalcError::MissingOperand)));
+                                    let val = self.data.pop()
+                                        .ok_or::<Error>(ErrorKind::MissingOperand.into())?;
+                                    calc.data.push(val);
                                     self.state.push(CalcState::Reading { block: block, level: level });
                                 }
                                 None => {
-                                    calc.data.push(try!(self.data.pop().ok_or(CalcError::MissingOperand)));
+                                    let val = self.data.pop()
+                                        .ok_or::<Error>(ErrorKind::MissingOperand.into())?;
+                                    calc.data.push(val);
                                 }
                             }
                         } else {
@@ -167,11 +140,9 @@ impl Calc {
                         }
                     }
                 } else {
-                    if let Some(val) = Value::parse(word) {
-                        self.data.push(val);
-                    } else {
-                        return Err(CalcError::WordParseError(word.to_owned()));
-                    }
+                    let val = Value::parse(word)
+                        .ok_or::<Error>(ErrorKind::WordParseError(word.to_owned()).into())?;
+                    self.data.push(val);
                 }
             }
         }
@@ -179,7 +150,7 @@ impl Calc {
     }
 
     #[allow(cyclomatic_complexity)]
-    fn run_builtin(&mut self, word: BuiltinWord) -> CalcResult<()> {
+    fn run_builtin(&mut self, word: BuiltinWord) -> Result<()> {
         use words::BuiltinWord::*;
         match word {
             Add => self.perform_binop(::std::ops::Add::add, ::std::ops::Add::add),
@@ -189,7 +160,7 @@ impl Calc {
                 let y = try!(self.get_float_cast());
                 let x = try!(self.get_float_cast());
                 if y == 0.0 {
-                    return Err(CalcError::DivisionByZero);
+                    return Err(ErrorKind::DivisionByZero.into());
                 }
                 self.data.push(Value::Float(x / y));
                 Ok(())
@@ -236,7 +207,7 @@ impl Calc {
                     if let Some(res) = sub_calc.data.pop() {
                         result.push(res);
                     } else {
-                        return Err(CalcError::BlockNoResult);
+                        return Err(ErrorKind::BlockNoResult.into());
                     }
                 }
                 self.data.push(Value::Vector(result));
@@ -259,7 +230,7 @@ impl Calc {
                     self.data.push(res);
                     Ok(())
                 } else {
-                    Err(CalcError::BlockNoResult)
+                    Err(ErrorKind::BlockNoResult.into())
                 }
             }
             Filter => {
@@ -279,7 +250,7 @@ impl Calc {
                             _ => {}
                         }
                     } else {
-                        return Err(CalcError::BlockNoResult);
+                        return Err(ErrorKind::BlockNoResult.into());
                     }
                 }
                 result.shrink_to_fit();
@@ -297,7 +268,7 @@ impl Calc {
                             }
                         }
                     } else {
-                        return Err(CalcError::WrongTypeOperand);
+                        return Err(ErrorKind::WrongTypeOperand.into());
                     }
 
                 }
@@ -310,7 +281,7 @@ impl Calc {
                     if let Value::Vector(ref vec) = a {
                         vec.len()
                     } else {
-                        return Err(CalcError::WrongTypeOperand);
+                        return Err(ErrorKind::WrongTypeOperand.into());
                     }
                 };
                 self.data.push(Value::Int(len as i64));
@@ -406,42 +377,42 @@ impl Calc {
         }
     }
 
-    fn get_operand(&mut self) -> CalcResult<Value> {
-        self.data.pop().ok_or(CalcError::MissingOperand)
+    fn get_operand(&mut self) -> Result<Value> {
+        self.data.pop().ok_or(ErrorKind::MissingOperand.into())
     }
 
     #[allow(dead_code)]
-    fn get_int(&mut self) -> CalcResult<i64> {
-        self.get_operand().and_then(|val| val.as_int().ok_or(CalcError::WrongTypeOperand))
+    fn get_int(&mut self) -> Result<i64> {
+        self.get_operand().and_then(|val| val.as_int().ok_or(ErrorKind::WrongTypeOperand.into()))
     }
 
-    fn get_int_cast(&mut self) -> CalcResult<i64> {
-        self.get_operand().and_then(|val| val.as_int_cast().ok_or(CalcError::WrongTypeOperand))
-    }
-
-    #[allow(dead_code)]
-    fn get_float(&mut self) -> CalcResult<f64> {
-        self.get_operand().and_then(|val| val.as_float().ok_or(CalcError::WrongTypeOperand))
-    }
-
-    fn get_float_cast(&mut self) -> CalcResult<f64> {
-        self.get_operand().and_then(|val| val.as_float_cast().ok_or(CalcError::WrongTypeOperand))
-    }
-
-    fn get_block(&mut self) -> CalcResult<Vec<Word>> {
-        self.get_operand().and_then(|val| val.into_block().ok_or(CalcError::WrongTypeOperand))
-    }
-
-    fn get_vector(&mut self) -> CalcResult<Vec<Value>> {
-        self.get_operand().and_then(|val| val.into_vector().ok_or(CalcError::WrongTypeOperand))
-    }
-
-    fn get_word(&mut self) -> CalcResult<Word> {
-        self.get_operand().and_then(|val| val.into_word().ok_or(CalcError::WrongTypeOperand))
+    fn get_int_cast(&mut self) -> Result<i64> {
+        self.get_operand().and_then(|val| val.as_int_cast().ok_or(ErrorKind::WrongTypeOperand.into()))
     }
 
     #[allow(dead_code)]
-    fn perform_unary<F>(&mut self, f: F) -> CalcResult<()>
+    fn get_float(&mut self) -> Result<f64> {
+        self.get_operand().and_then(|val| val.as_float().ok_or(ErrorKind::WrongTypeOperand.into()))
+    }
+
+    fn get_float_cast(&mut self) -> Result<f64> {
+        self.get_operand().and_then(|val| val.as_float_cast().ok_or(ErrorKind::WrongTypeOperand.into()))
+    }
+
+    fn get_block(&mut self) -> Result<Vec<Word>> {
+        self.get_operand().and_then(|val| val.into_block().ok_or(ErrorKind::WrongTypeOperand.into()))
+    }
+
+    fn get_vector(&mut self) -> Result<Vec<Value>> {
+        self.get_operand().and_then(|val| val.into_vector().ok_or(ErrorKind::WrongTypeOperand.into()))
+    }
+
+    fn get_word(&mut self) -> Result<Word> {
+        self.get_operand().and_then(|val| val.into_word().ok_or(ErrorKind::WrongTypeOperand.into()))
+    }
+
+    #[allow(dead_code)]
+    fn perform_unary<F>(&mut self, f: F) -> Result<()>
         where F: Fn(f64) -> f64
     {
         let x = try!(self.get_float_cast());
@@ -449,7 +420,7 @@ impl Calc {
         Ok(())
     }
 
-    fn perform_binop<F, G>(&mut self, f: F, g: G) -> CalcResult<()>
+    fn perform_binop<F, G>(&mut self, f: F, g: G) -> Result<()>
         where F: Fn(f64, f64) -> f64,
               G: Fn(i64, i64) -> i64
     {
@@ -460,7 +431,7 @@ impl Calc {
             (Value::Float(x), Value::Float(y)) => self.data.push(Value::Float(f(x, y))),
             (Value::Int(x),   Value::Float(y)) => self.data.push(Value::Float(f(x as f64, y))),
             (Value::Float(x), Value::Int(y))   => self.data.push(Value::Float(f(x, y as f64))),
-            (_, _) => return Err(CalcError::WrongTypeOperand)
+            (_, _) => return Err(ErrorKind::WrongTypeOperand.into())
         }
         Ok(())
     }
