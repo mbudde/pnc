@@ -100,10 +100,10 @@ impl Value {
         }
     }
 
-    pub fn into_vector(self) -> Option<Vec<Value>> {
+    pub fn into_vector(self) -> Result<Vec<Value>, Self> {
         match self {
-            Value::Vector(v) => Some(v),
-            _ => None,
+            Value::Vector(v) => Ok(v),
+            v => Err(v),
         }
     }
 
@@ -115,17 +115,28 @@ impl Value {
         }
     }
 
-    pub fn into_block(self) -> Option<Vec<Word>> {
+    pub fn into_block(self) -> Result<Vec<Word>, Self> {
         match self {
-            Value::Block(b) => Some(b),
-            _ => None,
+            Value::Block(b) => Ok(b),
+            v => Err(v),
         }
     }
 
-    pub fn into_word(self) -> Option<Word> {
+    pub fn into_word(self) -> Result<Word, Self> {
         match self {
-            Value::QuotedWord(w) => Some(w),
-            _ => None,
+            Value::QuotedWord(w) => Ok(w),
+            v => Err(v),
+        }
+    }
+
+    pub fn type_of(&self) -> &'static str {
+        match *self {
+            Value::Bool(..)       => "type",
+            Value::Int(..)        => "int",
+            Value::Float(..)      => "float",
+            Value::Vector(..)     => "vector",
+            Value::Block(..)      => "block",
+            Value::QuotedWord(..) => "quoted word",
         }
     }
 }

@@ -272,7 +272,7 @@ impl Calc {
                             }
                         }
                     } else {
-                        return Err(ErrorKind::WrongTypeOperand.into());
+                        return Err(ErrorKind::WrongTypeOperand(a, "vector").into());
                     }
 
                 }
@@ -285,7 +285,7 @@ impl Calc {
                     if let Value::Vector(ref vec) = a {
                         vec.len()
                     } else {
-                        return Err(ErrorKind::WrongTypeOperand.into());
+                        return Err(ErrorKind::WrongTypeOperand(a, "vector").into());
                     }
                 };
                 self.data.push(Value::Int(len as i64));
@@ -387,32 +387,46 @@ impl Calc {
 
     #[allow(dead_code)]
     fn get_int(&mut self) -> Result<i64> {
-        self.get_operand().and_then(|val| val.as_int().ok_or(ErrorKind::WrongTypeOperand.into()))
+        self.get_operand().and_then(|val| {
+            val.as_int().ok_or(ErrorKind::WrongTypeOperand(val, "int").into())
+        })
     }
 
     fn get_int_cast(&mut self) -> Result<i64> {
-        self.get_operand().and_then(|val| val.as_int_cast().ok_or(ErrorKind::WrongTypeOperand.into()))
+        self.get_operand().and_then(|val| {
+            val.as_int_cast().ok_or(ErrorKind::WrongTypeOperand(val, "int or float").into())
+        })
     }
 
     #[allow(dead_code)]
     fn get_float(&mut self) -> Result<f64> {
-        self.get_operand().and_then(|val| val.as_float().ok_or(ErrorKind::WrongTypeOperand.into()))
+        self.get_operand().and_then(|val| {
+            val.as_float().ok_or(ErrorKind::WrongTypeOperand(val, "float").into())
+        })
     }
 
     fn get_float_cast(&mut self) -> Result<f64> {
-        self.get_operand().and_then(|val| val.as_float_cast().ok_or(ErrorKind::WrongTypeOperand.into()))
+        self.get_operand().and_then(|val| {
+            val.as_float_cast().ok_or(ErrorKind::WrongTypeOperand(val, "int or float").into())
+        })
     }
 
     fn get_block(&mut self) -> Result<Vec<Word>> {
-        self.get_operand().and_then(|val| val.into_block().ok_or(ErrorKind::WrongTypeOperand.into()))
+        self.get_operand().and_then(|val| {
+            val.into_block().map_err(|v| ErrorKind::WrongTypeOperand(v, "block").into())
+        })
     }
 
     fn get_vector(&mut self) -> Result<Vec<Value>> {
-        self.get_operand().and_then(|val| val.into_vector().ok_or(ErrorKind::WrongTypeOperand.into()))
+        self.get_operand().and_then(|val| {
+            val.into_vector().map_err(|v| ErrorKind::WrongTypeOperand(v, "vector").into())
+        })
     }
 
     fn get_word(&mut self) -> Result<Word> {
-        self.get_operand().and_then(|val| val.into_word().ok_or(ErrorKind::WrongTypeOperand.into()))
+        self.get_operand().and_then(|val| {
+            val.into_word().map_err(|v| ErrorKind::WrongTypeOperand(v, "quoted word").into())
+        })
     }
 
     #[allow(dead_code)]
@@ -435,7 +449,12 @@ impl Calc {
             (Value::Float(x), Value::Float(y)) => self.data.push(Value::Float(f(x, y))),
             (Value::Int(x),   Value::Float(y)) => self.data.push(Value::Float(f(x as f64, y))),
             (Value::Float(x), Value::Int(y))   => self.data.push(Value::Float(f(x, y as f64))),
-            (_, _) => return Err(ErrorKind::WrongTypeOperand.into())
+            (Value::Int(_), y) | (Value::Float(_), y) => {
+                return Err(ErrorKind::WrongTypeOperand(y, "int or float").into())
+            }
+            (x, _) => {
+                return Err(ErrorKind::WrongTypeOperand(x, "int or float").into())
+            }
         }
         Ok(())
     }

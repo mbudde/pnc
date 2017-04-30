@@ -12,6 +12,8 @@ use clap::{App, AppSettings, Arg};
 
 use errors::*;
 
+mod words;
+
 mod errors {
     use words::Word;
     error_chain! {
@@ -23,8 +25,9 @@ mod errors {
             MissingOperand {
                 description("operation needs an operand but stack is empty")
             }
-            WrongTypeOperand {
+            WrongTypeOperand(value: ::words::Value, expected: &'static str) {
                 description("operand has a wrong type")
+                display("operand has a wrong type, got operand '{}' (of type {}) but expected type {}", value, value.type_of(), expected)
             }
             BlockNoResult {
                 description("block left no result on the stack")
@@ -39,7 +42,6 @@ mod errors {
 
 mod calc;
 mod dict;
-mod words;
 
 quick_main!(run);
 
@@ -71,7 +73,7 @@ fn run() -> Result<()> {
                 .chain_err(|| "could not read user prelude")?;
 
             let prelude_words = shlex::Shlex::new(&prelude);
-            calc.run(prelude_words).chain_err(|| "could not execute user prelude")?;
+            calc.run(prelude_words).chain_err(|| "failed to execute user prelude")?;
         }
     }
 
@@ -79,7 +81,7 @@ fn run() -> Result<()> {
         calc.list_available_words();
     } else {
         if let Some(words) = args.values_of("WORD") {
-            calc.run(words).chain_err(|| "could not execute words in arguments")?;
+            calc.run(words).chain_err(|| "failed to execute words in arguments")?;
         }
         if !args.is_present("quiet") {
             calc.print_stack().chain_err(|| "failed to print stack")?;
