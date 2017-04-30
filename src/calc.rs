@@ -76,9 +76,9 @@ impl Calc {
                 } else {
                     block.push(word.to_owned());
                     if word == "}" {
-                        level = level - 1;
+                        level -= 1;
                     } else if word == "{" {
-                        level = level + 1;
+                        level += 1;
                     }
                     self.state.push(CalcState::Reading {
                         block: block,
@@ -96,19 +96,19 @@ impl Calc {
                             match self.state.pop() {
                                 Some(CalcState::Collecting { calc: mut parent }) => {
                                     let val = parent.data.pop()
-                                        .ok_or::<Error>(ErrorKind::MissingOperand.into())?;
+                                        .ok_or_else::<Error, _>(|| ErrorKind::MissingOperand.into())?;
                                     calc.data.push(val);
                                     self.state.push(CalcState::Collecting { calc: parent });
                                 }
                                 Some(CalcState::Reading { block, level }) => {
                                     let val = self.data.pop()
-                                        .ok_or::<Error>(ErrorKind::MissingOperand.into())?;
+                                        .ok_or_else::<Error, _>(|| ErrorKind::MissingOperand.into())?;
                                     calc.data.push(val);
                                     self.state.push(CalcState::Reading { block: block, level: level });
                                 }
                                 None => {
                                     let val = self.data.pop()
-                                        .ok_or::<Error>(ErrorKind::MissingOperand.into())?;
+                                        .ok_or_else::<Error, _>(|| ErrorKind::MissingOperand.into())?;
                                     calc.data.push(val);
                                 }
                             }
@@ -145,7 +145,7 @@ impl Calc {
                     }
                 } else {
                     let val = Value::parse(word)
-                        .ok_or::<Error>(ErrorKind::WordParseError(word.to_owned()).into())?;
+                        .ok_or_else::<Error, _>(|| ErrorKind::WordParseError(word.to_owned()).into())?;
                     self.data.push(val);
                 }
             }
@@ -382,32 +382,32 @@ impl Calc {
     }
 
     fn get_operand(&mut self) -> Result<Value> {
-        self.data.pop().ok_or(ErrorKind::MissingOperand.into())
+        self.data.pop().ok_or_else(|| ErrorKind::MissingOperand.into())
     }
 
     #[allow(dead_code)]
     fn get_int(&mut self) -> Result<i64> {
         self.get_operand().and_then(|val| {
-            val.as_int().ok_or(ErrorKind::WrongTypeOperand(val, "int").into())
+            val.as_int().ok_or_else(|| ErrorKind::WrongTypeOperand(val, "int").into())
         })
     }
 
     fn get_int_cast(&mut self) -> Result<i64> {
         self.get_operand().and_then(|val| {
-            val.as_int_cast().ok_or(ErrorKind::WrongTypeOperand(val, "int or float").into())
+            val.as_int_cast().ok_or_else(|| ErrorKind::WrongTypeOperand(val, "int or float").into())
         })
     }
 
     #[allow(dead_code)]
     fn get_float(&mut self) -> Result<f64> {
         self.get_operand().and_then(|val| {
-            val.as_float().ok_or(ErrorKind::WrongTypeOperand(val, "float").into())
+            val.as_float().ok_or_else(|| ErrorKind::WrongTypeOperand(val, "float").into())
         })
     }
 
     fn get_float_cast(&mut self) -> Result<f64> {
         self.get_operand().and_then(|val| {
-            val.as_float_cast().ok_or(ErrorKind::WrongTypeOperand(val, "int or float").into())
+            val.as_float_cast().ok_or_else(|| ErrorKind::WrongTypeOperand(val, "int or float").into())
         })
     }
 
