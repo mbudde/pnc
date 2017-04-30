@@ -66,14 +66,22 @@ fn run() -> Result<()> {
     calc.run(prelude_words).chain_err(|| "could not execute builtin prelude")?;
 
     if let Some(mut p) = std::env::home_dir() {
-        p.push(".prelude.pnc");
-        if let Ok(mut prelude_file) = File::open(p) {
-            let mut prelude = String::new();
-            prelude_file.read_to_string(&mut prelude)
-                .chain_err(|| "could not read user prelude")?;
+        p.push(".config/pnc/prelude.pnc");
+        match File::open(&p) {
+            Ok(mut prelude_file) => {
+                let mut prelude = String::new();
+                println!("{:?}", prelude);
+                prelude_file.read_to_string(&mut prelude)
+                    .chain_err(|| format!("could not read user prelude {:?}", p))?;
 
-            let prelude_words = shlex::Shlex::new(&prelude);
-            calc.run(prelude_words).chain_err(|| "failed to execute user prelude")?;
+                let prelude_words = shlex::Shlex::new(&prelude);
+                calc.run(prelude_words).chain_err(|| "failed to execute user prelude")?;
+            }
+            Err(ref e) if p.exists() => {
+                writeln!(&mut ::std::io::stderr(), "Warning: failed to open user prelude {:?}: {}", p, e)
+                    .chain_err(|| "write to stderr failed")?;
+            }
+            _ => {}
         }
     }
 
