@@ -6,6 +6,6 @@ authors = ["Michael Budde <mbudde@gmail.com>"]
 [dependencies]
 shlex = "0.1"
 log = "0.3"
-env_logger = "0.3"
+env_logger = "0.4"
 clap = "2.2.2"
-error-chain = "0.8"
+error-chain = "0.11"
