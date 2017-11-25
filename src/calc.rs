@@ -60,7 +60,8 @@ impl Calc {
     {
         for word in iter {
             let word = word.as_ref();
-            try!(self.run_one(word));
+            self.run_one(word)
+                .chain_err(|| format!("failed while evaluating word {}", word))?;
         }
         Ok(())
     }
@@ -112,10 +113,10 @@ impl Calc {
                                 }
                             }
                         } else {
-                            try!(calc.run_one(word));
+                            calc.run_one(word)?;
                         }
                     } else {
-                        try!(calc.run_one(word));
+                        calc.run_one(word)?;
                     }
                     self.state.push(CalcState::Collecting { calc: calc });
                 }
@@ -135,11 +136,11 @@ impl Calc {
                 } else if let Some(op) = self.dict.lookup(word) {
                     match *op {
                         Operation::Builtin(builtin) => {
-                            try!(self.run_builtin(builtin));
+                            self.run_builtin(builtin)?;
                         }
                         Operation::Block(ref block) => {
                             trace!("executing block: {:?}", block);
-                            try!(self.run(block.into_iter()));
+                            self.run(block.into_iter())?;
                         }
                     }
                 } else {
@@ -177,14 +178,14 @@ impl Calc {
             Repeat => self.builtin_repeat(),
             Roll3 => self.builtin_roll3(),
             Def => {
-                let block = try!(self.get_block());
-                let name = try!(self.get_word());
+                let block = self.get_block()?;
+                let name = self.get_word()?;
                 self.dict.insert(name, Operation::Block(block));
                 Ok(())
             }
             Alias => {
-                let val = try!(self.get_word());
-                let name = try!(self.get_word());
+                let val = self.get_word()?;
+                let name = self.get_word()?;
                 self.dict.insert_alias(name, val);
                 Ok(())
             }
@@ -250,7 +251,7 @@ impl Calc {
     fn perform_unary<F>(&mut self, f: F) -> Result<()>
         where F: Fn(f64) -> f64
     {
-        let x = try!(self.get_float_cast());
+        let x = self.get_float_cast()?;
         self.data.push(Value::Float(f(x)));
         Ok(())
     }
@@ -259,8 +260,8 @@ impl Calc {
         where F: Fn(f64, f64) -> f64,
               G: Fn(BigInt, BigInt) -> BigInt
     {
-        let y = try!(self.get_operand());
-        let x = try!(self.get_operand());
+        let y = self.get_operand()?;
+        let x = self.get_operand()?;
         match (x, y) {
             (Value::Int(x),   Value::Int(y))   => self.data.push(Value::Int(g(x, y))),
             (Value::Float(x), Value::Float(y)) => self.data.push(Value::Float(f(x, y))),

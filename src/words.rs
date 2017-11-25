@@ -152,17 +152,17 @@ impl fmt::Display for Value {
             Int(ref v) => write!(f, "{}", v),
             Float(v) => write!(f, "{}", v),
             Vector(ref v) => {
-                try!(write!(f, "["));
+                write!(f, "[")?;
                 let mut iter = v.into_iter();
                 if let Some(e) = iter.next() {
-                    try!(e.fmt(f));
+                    e.fmt(f)?;
                     for e in iter {
-                        try!(write!(f, ", "));
-                        try!(e.fmt(f));
+                        write!(f, ", ")?;
+                        e.fmt(f)?;
                     }
                 }
-                try!(write!(f, "]"));
-                try!(write!(f, " len: {}", v.len()));
+                write!(f, "]")?;
+                write!(f, " len: {}", v.len())?;
                 Ok(())
             }
             Block(_) => write!(f, "<block>"),

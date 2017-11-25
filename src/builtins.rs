@@ -35,8 +35,8 @@ fn add(lhs: Value, rhs: &Value) -> Result<Value> {
 
 impl Calc {
     pub fn builtin_div(&mut self) -> Result<()> {
-        let y = try!(self.get_float_cast());
-        let x = try!(self.get_float_cast());
+        let y = self.get_float_cast()?;
+        let x = self.get_float_cast()?;
         if y == 0.0 {
             return Err(ErrorKind::DivisionByZero.into());
         }
@@ -45,13 +45,13 @@ impl Calc {
     }
 
     pub fn builtin_print(&mut self) -> Result<()> {
-        let val = try!(self.get_operand());
+        let val = self.get_operand()?;
         println!("{}", val);
         Ok(())
     }
 
     pub fn builtin_duplicate(&mut self) -> Result<()> {
-        let val = try!(self.get_operand());
+        let val = self.get_operand()?;
         self.data.push(val.clone());
         self.data.push(val);
         Ok(())
@@ -74,14 +74,14 @@ impl Calc {
 
 
     pub fn builtin_map(&mut self) -> Result<()> {
-        let block = try!(self.get_block());
-        let vec = try!(self.get_vector());
+        let block = self.get_block()?;
+        let vec = self.get_vector()?;
         let mut result = Vec::with_capacity(vec.len());
         for val in vec {
             let mut sub_calc = self.sub_calc();
             sub_calc.data.push(val);
             for word in &block {
-                try!(sub_calc.run_one(word));
+                sub_calc.run_one(word)?;
             }
             if let Some(res) = sub_calc.data.pop() {
                 result.push(res);
@@ -94,16 +94,16 @@ impl Calc {
     }
 
     pub fn builtin_fold(&mut self) -> Result<()> {
-        let block = try!(self.get_block());
-        let init = try!(self.get_operand());
-        let values = try!(self.get_vector());
+        let block = self.get_block()?;
+        let init = self.get_operand()?;
+        let values = self.get_vector()?;
 
         let mut sub_calc = self.sub_calc();
         sub_calc.data.push(init);
         for val in values {
             sub_calc.data.push(val);
             for word in &block {
-                try!(sub_calc.run_one(word));
+                sub_calc.run_one(word)?;
             }
         }
         if let Some(res) = sub_calc.data.pop() {
@@ -115,14 +115,14 @@ impl Calc {
     }
 
     pub fn builtin_filter(&mut self) -> Result<()> {
-        let block = try!(self.get_block());
-        let values = try!(self.get_vector());
+        let block = self.get_block()?;
+        let values = self.get_vector()?;
         let mut result = Vec::with_capacity(values.len());
         for val in values {
             let mut sub_calc = self.sub_calc();
             sub_calc.data.push(val.clone());
             for word in &block {
-                try!(sub_calc.run_one(word));
+                sub_calc.run_one(word)?;
             }
             if let Some(res) = sub_calc.data.pop() {
                 match res {
@@ -142,7 +142,7 @@ impl Calc {
     pub fn builtin_sum(&mut self) -> Result<()> {
         let mut sum = Value::Int(Zero::zero());
         {
-            let a = try!(self.get_operand());
+            let a = self.get_operand()?;
             if let Value::Vector(ref vec) = a {
                 for val in vec {
                     sum = add(sum, val)?;
@@ -158,7 +158,7 @@ impl Calc {
 
     pub fn builtin_length(&mut self) -> Result<()> {
         let len = {
-            let a = try!(self.get_operand());
+            let a = self.get_operand()?;
             if let Value::Vector(ref vec) = a {
                 vec.len()
             } else {
@@ -170,16 +170,16 @@ impl Calc {
     }
 
     pub fn builtin_swap(&mut self) -> Result<()> {
-        let a = try!(self.get_operand());
-        let b = try!(self.get_operand());
+        let a = self.get_operand()?;
+        let b = self.get_operand()?;
         self.data.push(a);
         self.data.push(b);
         Ok(())
     }
 
     pub fn builtin_over(&mut self) -> Result<()> {
-        let a = try!(self.get_operand());
-        let b = try!(self.get_operand());
+        let a = self.get_operand()?;
+        let b = self.get_operand()?;
         self.data.push(b.clone());
         self.data.push(a);
         self.data.push(b);
@@ -187,20 +187,20 @@ impl Calc {
     }
 
     pub fn builtin_repeat(&mut self) -> Result<()> {
-        let n = try!(self.get_int_cast());
-        let block = try!(self.get_block());
+        let n = self.get_int_cast()?;
+        let block = self.get_block()?;
         for _ in 0..n {
             for word in &block {
-                try!(self.run_one(word));
+                self.run_one(word)?;
             }
         }
         Ok(())
     }
 
     pub fn builtin_roll3(&mut self) -> Result<()> {
-        let a = try!(self.get_operand());
-        let b = try!(self.get_operand());
-        let c = try!(self.get_operand());
+        let a = self.get_operand()?;
+        let b = self.get_operand()?;
+        let c = self.get_operand()?;
         self.data.push(b);
         self.data.push(c);
         self.data.push(a);
@@ -208,14 +208,14 @@ impl Calc {
     }
 
     pub fn builtin_apply(&mut self) -> Result<()> {
-        let op = try!(self.get_operand());
+        let op = self.get_operand()?;
         match op {
             Value::QuotedWord(word) => {
-                try!(self.run_one(&word));
+                self.run_one(&word)?;
             }
             Value::Block(block) => {
                 for word in &block {
-                    try!(self.run_one(word));
+                    self.run_one(word)?;
                 }
             }
             _ => {}
@@ -224,22 +224,22 @@ impl Calc {
     }
 
     pub fn builtin_min(&mut self) -> Result<()> {
-        let a = try!(self.get_int());
-        let b = try!(self.get_int());
+        let a = self.get_int()?;
+        let b = self.get_int()?;
         self.data.push(Value::Int(::std::cmp::min(a, b)));
         Ok(())
     }
 
     pub fn builtin_max(&mut self) -> Result<()> {
-        let a = try!(self.get_int());
-        let b = try!(self.get_int());
+        let a = self.get_int()?;
+        let b = self.get_int()?;
         self.data.push(Value::Int(::std::cmp::max(a, b)));
         Ok(())
     }
 
     pub fn builtin_cmp(&mut self) -> Result<()> {
-        let a = try!(self.get_int());
-        let b = try!(self.get_int());
+        let a = self.get_int()?;
+        let b = self.get_int()?;
         let cmp = match b.cmp(&a) {
             Ordering::Less => -1,
             Ordering::Equal => 0,
