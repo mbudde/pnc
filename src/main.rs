@@ -81,8 +81,7 @@ fn run() -> Result<()> {
                 calc.run(prelude_words).chain_err(|| "failed to execute user prelude")?;
             }
             Err(ref e) if p.exists() => {
-                writeln!(&mut ::std::io::stderr(), "Warning: failed to open user prelude {:?}: {}", p, e)
-                    .chain_err(|| "write to stderr failed")?;
+                eprintln!("Warning: failed to open user prelude {:?}: {}", p, e);
             }
             _ => {}
         }
