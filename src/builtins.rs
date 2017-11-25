@@ -1,8 +1,37 @@
 use std::cmp::Ordering;
 
+use num::{Zero, ToPrimitive};
+use num::bigint::ToBigInt;
+
 use words::Value;
 use calc::Calc;
 use errors::*;
+
+fn add(lhs: Value, rhs: &Value) -> Result<Value> {
+    match lhs {
+        Value::Int(i) => {
+            match *rhs {
+                Value::Int(ref j) => Ok(Value::Int(i + j)),
+                Value::Float(g) => {
+                    let f = i.to_f64().ok_or::<Error>(ErrorKind::BigIntTooLarge.into())?;
+                    Ok(Value::Float(f + g))
+                }
+                ref v => Err(ErrorKind::WrongTypeOperand(v.clone(), "number").into())
+            }
+        }
+        Value::Float(f) => {
+            match *rhs {
+                Value::Int(ref j) => {
+                    let g = j.to_f64().ok_or::<Error>(ErrorKind::BigIntTooLarge.into())?;
+                    Ok(Value::Float(f + g))
+                }
+                Value::Float(g) => Ok(Value::Float(f + g)),
+                ref v => Err(ErrorKind::WrongTypeOperand(v.clone(), "number").into())
+            }
+        }
+        v => Err(ErrorKind::WrongTypeOperand(v, "number").into())
+    }
+}
 
 impl Calc {
     pub fn builtin_div(&mut self) -> Result<()> {
@@ -97,7 +126,7 @@ impl Calc {
             }
             if let Some(res) = sub_calc.data.pop() {
                 match res {
-                    Value::Int(x) if x != 0 => { result.push(val); }
+                    Value::Int(ref x) if !x.is_zero() => { result.push(val); }
                     Value::Bool(true) => { result.push(val); }
                     _ => {}
                 }
@@ -111,21 +140,19 @@ impl Calc {
     }
 
     pub fn builtin_sum(&mut self) -> Result<()> {
-        let mut sum = 0f64;
+        let mut sum = Value::Int(Zero::zero());
         {
             let a = try!(self.get_operand());
             if let Value::Vector(ref vec) = a {
                 for val in vec {
-                    if let Some(n) = val.as_float_cast() {
-                        sum += n;
-                    }
+                    sum = add(sum, val)?;
                 }
             } else {
                 return Err(ErrorKind::WrongTypeOperand(a, "vector").into());
             }
 
         }
-        self.data.push(Value::Float(sum));
+        self.data.push(sum);
         Ok(())
     }
 
@@ -138,7 +165,7 @@ impl Calc {
                 return Err(ErrorKind::WrongTypeOperand(a, "vector").into());
             }
         };
-        self.data.push(Value::Int(len as i64));
+        self.data.push(Value::Int(len.to_bigint().unwrap()));
         Ok(())
     }
 
@@ -218,7 +245,7 @@ impl Calc {
             Ordering::Equal => 0,
             Ordering::Greater => 1,
         };
-        self.data.push(Value::Int(cmp));
+        self.data.push(Value::Int(cmp.to_bigint().unwrap()));
         Ok(())
     }
 }

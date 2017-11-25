@@ -1,3 +1,4 @@
+use num::{BigInt, ToPrimitive};
 use errors::*;
 use words::{BuiltinWord, Operation, Value, Word};
 use dict;
@@ -202,7 +203,7 @@ impl Calc {
     }
 
     #[allow(dead_code)]
-    pub fn get_int(&mut self) -> Result<i64> {
+    pub fn get_int(&mut self) -> Result<BigInt> {
         self.get_operand().and_then(|val| {
             val.as_int().ok_or_else(|| ErrorKind::WrongTypeOperand(val, "int").into())
         })
@@ -256,15 +257,21 @@ impl Calc {
 
     fn perform_binop<F, G>(&mut self, f: F, g: G) -> Result<()>
         where F: Fn(f64, f64) -> f64,
-              G: Fn(i64, i64) -> i64
+              G: Fn(BigInt, BigInt) -> BigInt
     {
         let y = try!(self.get_operand());
         let x = try!(self.get_operand());
         match (x, y) {
             (Value::Int(x),   Value::Int(y))   => self.data.push(Value::Int(g(x, y))),
             (Value::Float(x), Value::Float(y)) => self.data.push(Value::Float(f(x, y))),
-            (Value::Int(x),   Value::Float(y)) => self.data.push(Value::Float(f(x as f64, y))),
-            (Value::Float(x), Value::Int(y))   => self.data.push(Value::Float(f(x, y as f64))),
+            (Value::Int(x),   Value::Float(y)) => {
+                let x_f = x.to_f64().ok_or::<Error>(ErrorKind::BigIntTooLarge.into())?;
+                self.data.push(Value::Float(f(x_f, y)));
+            }
+            (Value::Float(x), Value::Int(y)) => {
+                let y_f = y.to_f64().ok_or::<Error>(ErrorKind::BigIntTooLarge.into())?;
+                self.data.push(Value::Float(f(x, y_f)));
+            }
             (Value::Int(_), y) | (Value::Float(_), y) => {
                 return Err(ErrorKind::WrongTypeOperand(y, "int or float").into())
             }

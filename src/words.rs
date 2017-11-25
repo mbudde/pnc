@@ -1,5 +1,8 @@
 use std::fmt;
 
+use num::bigint::BigInt;
+use num::ToPrimitive;
+
 pub type Word = String;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -51,7 +54,7 @@ pub enum Operation {
 pub enum Value {
     #[allow(dead_code)]
     Bool(bool),
-    Int(i64),
+    Int(BigInt),
     Float(f64),
     Vector(Vec<Value>),
     Block(Vec<Word>),
@@ -61,7 +64,7 @@ pub enum Value {
 impl Value {
     pub fn parse(s: &str) -> Option<Value> {
         let s = s.trim();
-        if let Ok(num) = s.parse::<i64>() {
+        if let Some(num) = BigInt::parse_bytes(s.as_bytes(), 10) {
             Some(Value::Int(num))
         } else if let Ok(num) = s.parse::<f64>() {
             Some(Value::Float(num))
@@ -78,16 +81,16 @@ impl Value {
         }
     }
 
-    pub fn as_int(&self) -> Option<i64> {
+    pub fn as_int(&self) -> Option<BigInt> {
         match *self {
-            Value::Int(i) => Some(i),
+            Value::Int(ref i) => Some(i.clone()),
             _ => None,
         }
     }
 
     pub fn as_int_cast(&self) -> Option<i64> {
         match *self {
-            Value::Int(i) => Some(i),
+            Value::Int(ref i) => i.to_i64(),
             Value::Float(f) => Some(f as i64),
             _ => None,
         }
@@ -110,7 +113,7 @@ impl Value {
     pub fn as_float_cast(&self) -> Option<f64> {
         match *self {
             Value::Float(f) => Some(f),
-            Value::Int(i) => Some(i as f64),
+            Value::Int(ref i) => i.to_f64(),
             _ => None,
         }
     }
@@ -146,7 +149,7 @@ impl fmt::Display for Value {
         use self::Value::*;
         match *self {
             Bool(v) => v.fmt(f),
-            Int(v) => write!(f, "{}", v),
+            Int(ref v) => write!(f, "{}", v),
             Float(v) => write!(f, "{}", v),
             Vector(ref v) => {
                 try!(write!(f, "["));

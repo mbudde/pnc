@@ -6,6 +6,7 @@ extern crate shlex;
 extern crate clap;
 #[macro_use]
 extern crate error_chain;
+extern crate num;
 
 use std::io::prelude::*;
 use std::fs::File;
@@ -38,6 +39,9 @@ mod errors {
             WordParseError(word: Word) {
                 description("could not parse word as number or operation")
                 display("could not parse word '{}' as number or operation", word)
+            }
+            BigIntTooLarge {
+                display("bigint is too large to convert to float")
             }
         }
     }
