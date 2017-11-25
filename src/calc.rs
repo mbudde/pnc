@@ -206,7 +206,6 @@ impl Calc {
         self.data.pop().ok_or_else(|| ErrorKind::MissingOperand.into())
     }
 
-    #[allow(dead_code)]
     pub fn get_int(&mut self) -> Result<BigInt> {
         self.get_operand().and_then(|val| {
             val.as_int().ok_or_else(|| ErrorKind::WrongTypeOperand(val, "int").into())
