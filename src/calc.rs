@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 use errors::*;
 use words::{BuiltinWord, Operation, Value, Word};
 use dict;
@@ -16,7 +14,7 @@ enum CalcState {
 
 pub struct Calc {
     dict: dict::Dictionary,
-    data: Vec<Value>,
+    pub data: Vec<Value>,
     state: Vec<CalcState>,
 }
 
@@ -30,7 +28,7 @@ impl Calc {
         }
     }
 
-    fn sub_calc(&self) -> Calc {
+    pub fn sub_calc(&self) -> Calc {
         Calc {
             dict: dict::Dictionary::with_parent(&self.dict),
             data: Vec::new(),
@@ -160,171 +158,23 @@ impl Calc {
             Add => self.perform_binop(::std::ops::Add::add, ::std::ops::Add::add),
             Sub => self.perform_binop(::std::ops::Sub::sub, ::std::ops::Sub::sub),
             Mul => self.perform_binop(::std::ops::Mul::mul, ::std::ops::Mul::mul),
-            Div => {
-                let y = try!(self.get_float_cast());
-                let x = try!(self.get_float_cast());
-                if y == 0.0 {
-                    return Err(ErrorKind::DivisionByZero.into());
-                }
-                self.data.push(Value::Float(x / y));
-                Ok(())
-            }
-            Print => {
-                let a = try!(self.get_operand());
-                println!("{}", a);
-                Ok(())
-            }
+            Div => self.builtin_div(),
+            Print => self.builtin_print(),
             Pop => {
                 self.data.pop();
                 Ok(())
             }
-            Duplicate => {
-                let a = try!(self.get_operand());
-                self.data.push(a.clone());
-                self.data.push(a);
-                Ok(())
-            }
-            Stdin => {
-                use std::io::BufRead;
-                let stdin = ::std::io::stdin();
-                let stdin = stdin.lock();
-                let mut vec = vec![];
-                for line in stdin.lines() {
-                    let line = line.unwrap();
-                    if let Some(val) = Value::parse(&line) {
-                        vec.push(val);
-                    }
-                }
-                self.data.push(Value::Vector(vec));
-                Ok(())
-            }
-            Map => {
-                let block = try!(self.get_block());
-                let vec = try!(self.get_vector());
-                let mut result = Vec::with_capacity(vec.len());
-                for val in vec {
-                    let mut sub_calc = self.sub_calc();
-                    sub_calc.data.push(val);
-                    for word in &block {
-                        try!(sub_calc.run_one(word));
-                    }
-                    if let Some(res) = sub_calc.data.pop() {
-                        result.push(res);
-                    } else {
-                        return Err(ErrorKind::BlockNoResult.into());
-                    }
-                }
-                self.data.push(Value::Vector(result));
-                Ok(())
-            }
-            Fold => {
-                let block = try!(self.get_block());
-                let init = try!(self.get_operand());
-                let values = try!(self.get_vector());
-
-                let mut sub_calc = self.sub_calc();
-                sub_calc.data.push(init);
-                for val in values {
-                    sub_calc.data.push(val);
-                    for word in &block {
-                        try!(sub_calc.run_one(word));
-                    }
-                }
-                if let Some(res) = sub_calc.data.pop() {
-                    self.data.push(res);
-                    Ok(())
-                } else {
-                    Err(ErrorKind::BlockNoResult.into())
-                }
-            }
-            Filter => {
-                let block = try!(self.get_block());
-                let values = try!(self.get_vector());
-                let mut result = Vec::with_capacity(values.len());
-                for val in values {
-                    let mut sub_calc = self.sub_calc();
-                    sub_calc.data.push(val.clone());
-                    for word in &block {
-                        try!(sub_calc.run_one(word));
-                    }
-                    if let Some(res) = sub_calc.data.pop() {
-                        match res {
-                            Value::Int(x) if x != 0 => { result.push(val); }
-                            Value::Bool(true) => { result.push(val); }
-                            _ => {}
-                        }
-                    } else {
-                        return Err(ErrorKind::BlockNoResult.into());
-                    }
-                }
-                result.shrink_to_fit();
-                self.data.push(Value::Vector(result));
-                Ok(())
-            }
-            Sum => {
-                let mut sum = 0f64;
-                {
-                    let a = try!(self.get_operand());
-                    if let Value::Vector(ref vec) = a {
-                        for val in vec {
-                            if let Some(n) = val.as_float_cast() {
-                                sum += n;
-                            }
-                        }
-                    } else {
-                        return Err(ErrorKind::WrongTypeOperand(a, "vector").into());
-                    }
-
-                }
-                self.data.push(Value::Float(sum));
-                Ok(())
-            }
-            Length => {
-                let len = {
-                    let a = try!(self.get_operand());
-                    if let Value::Vector(ref vec) = a {
-                        vec.len()
-                    } else {
-                        return Err(ErrorKind::WrongTypeOperand(a, "vector").into());
-                    }
-                };
-                self.data.push(Value::Int(len as i64));
-                Ok(())
-            }
-            Swap => {
-                let a = try!(self.get_operand());
-                let b = try!(self.get_operand());
-                self.data.push(a);
-                self.data.push(b);
-                Ok(())
-            }
-            Over => {
-                let a = try!(self.get_operand());
-                let b = try!(self.get_operand());
-                self.data.push(b.clone());
-                self.data.push(a);
-                self.data.push(b);
-                Ok(())
-            }
-            Repeat => {
-                let n = try!(self.get_int_cast());
-                let block = try!(self.get_block());
-                for _ in 0..n {
-                    for word in &block {
-                        try!(self.run_one(word));
-                    }
-                }
-                Ok(())
-            }
-            Roll3 => {
-                let a = try!(self.get_operand());
-                let b = try!(self.get_operand());
-                let c = try!(self.get_operand());
-                self.data.push(b);
-                self.data.push(c);
-                self.data.push(a);
-                Ok(())
-            }
+            Duplicate => self.builtin_duplicate(),
+            Stdin => self.builtin_stdin(),
+            Map => self.builtin_map(),
+            Fold => self.builtin_fold(),
+            Filter => self.builtin_filter(),
+            Sum => self.builtin_sum(),
+            Length => self.builtin_length(),
+            Swap => self.builtin_swap(),
+            Over => self.builtin_over(),
+            Repeat => self.builtin_repeat(),
+            Roll3 => self.builtin_roll3(),
             Def => {
                 let block = try!(self.get_block());
                 let name = try!(self.get_word());
@@ -337,93 +187,59 @@ impl Calc {
                 self.dict.insert_alias(name, val);
                 Ok(())
             }
-            Apply => {
-                let op = try!(self.get_operand());
-                match op {
-                    Value::QuotedWord(word) => {
-                        try!(self.run_one(&word));
-                    }
-                    Value::Block(block) => {
-                        for word in &block {
-                            try!(self.run_one(word));
-                        }
-                    }
-                    _ => {}
-                }
-                Ok(())
-            }
+            Apply => self.builtin_apply(),
             Arg => {
                 Ok(())
             }
-            Min => {
-                let a = try!(self.get_int());
-                let b = try!(self.get_int());
-                self.data.push(Value::Int(::std::cmp::min(a, b)));
-                Ok(())
-            }
-            Max => {
-                let a = try!(self.get_int());
-                let b = try!(self.get_int());
-                self.data.push(Value::Int(::std::cmp::max(a, b)));
-                Ok(())
-            }
-            Cmp => {
-                let a = try!(self.get_int());
-                let b = try!(self.get_int());
-                let cmp = match b.cmp(&a) {
-                    Ordering::Less => -1,
-                    Ordering::Equal => 0,
-                    Ordering::Greater => 1,
-                };
-                self.data.push(Value::Int(cmp));
-                Ok(())
-            }
+            Min => self.builtin_min(),
+            Max => self.builtin_max(),
+            Cmp => self.builtin_cmp(),
         }
     }
 
-    fn get_operand(&mut self) -> Result<Value> {
+    pub fn get_operand(&mut self) -> Result<Value> {
         self.data.pop().ok_or_else(|| ErrorKind::MissingOperand.into())
     }
 
     #[allow(dead_code)]
-    fn get_int(&mut self) -> Result<i64> {
+    pub fn get_int(&mut self) -> Result<i64> {
         self.get_operand().and_then(|val| {
             val.as_int().ok_or_else(|| ErrorKind::WrongTypeOperand(val, "int").into())
         })
     }
 
-    fn get_int_cast(&mut self) -> Result<i64> {
+    pub fn get_int_cast(&mut self) -> Result<i64> {
         self.get_operand().and_then(|val| {
             val.as_int_cast().ok_or_else(|| ErrorKind::WrongTypeOperand(val, "int or float").into())
         })
     }
 
     #[allow(dead_code)]
-    fn get_float(&mut self) -> Result<f64> {
+    pub fn get_float(&mut self) -> Result<f64> {
         self.get_operand().and_then(|val| {
             val.as_float().ok_or_else(|| ErrorKind::WrongTypeOperand(val, "float").into())
         })
     }
 
-    fn get_float_cast(&mut self) -> Result<f64> {
+    pub fn get_float_cast(&mut self) -> Result<f64> {
         self.get_operand().and_then(|val| {
             val.as_float_cast().ok_or_else(|| ErrorKind::WrongTypeOperand(val, "int or float").into())
         })
     }
 
-    fn get_block(&mut self) -> Result<Vec<Word>> {
+    pub fn get_block(&mut self) -> Result<Vec<Word>> {
         self.get_operand().and_then(|val| {
             val.into_block().map_err(|v| ErrorKind::WrongTypeOperand(v, "block").into())
         })
     }
 
-    fn get_vector(&mut self) -> Result<Vec<Value>> {
+    pub fn get_vector(&mut self) -> Result<Vec<Value>> {
         self.get_operand().and_then(|val| {
             val.into_vector().map_err(|v| ErrorKind::WrongTypeOperand(v, "vector").into())
         })
     }
 
-    fn get_word(&mut self) -> Result<Word> {
+    pub fn get_word(&mut self) -> Result<Word> {
         self.get_operand().and_then(|val| {
             val.into_word().map_err(|v| ErrorKind::WrongTypeOperand(v, "quoted word").into())
         })

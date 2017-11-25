@@ -29,7 +29,7 @@ impl Inner {
             }
         }
         match entry {
-            Some(&Entry::Op(ref op)) => Some(op.clone()),
+            Some(&Entry::Op(ref op)) => Some(Rc::clone(op)),
             _ => {
                 self.parent.as_ref().and_then(|p| p.borrow().lookup(word))
             }
@@ -84,7 +84,7 @@ impl Dictionary {
         Dictionary {
             inner: Rc::new(RefCell::new(Inner {
                 map: HashMap::new(),
-                parent: Some(dict.inner.clone()),
+                parent: Some(Rc::clone(&dict.inner)),
             })),
         }
     }

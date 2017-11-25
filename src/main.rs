@@ -1,3 +1,5 @@
+#![allow(unknown_lints)]
+
 #[macro_use] extern crate log;
 extern crate env_logger;
 extern crate shlex;
@@ -13,6 +15,7 @@ use clap::{App, AppSettings, Arg};
 use errors::*;
 
 mod words;
+mod builtins;
 
 mod errors {
     use words::Word;
