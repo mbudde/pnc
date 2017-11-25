@@ -43,6 +43,9 @@ mod errors {
             BigIntTooLarge {
                 display("bigint is too large to convert to float")
             }
+            UnknownWord(word: Word) {
+                display("the word '{}' does not exist", word)
+            }
         }
     }
 }

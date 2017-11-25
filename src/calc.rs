@@ -61,7 +61,7 @@ impl Calc {
         for word in iter {
             let word = word.as_ref();
             self.run_one(word)
-                .chain_err(|| format!("failed while evaluating word {}", word))?;
+                .chain_err(|| format!("error while evaluating word '{}'", word))?;
         }
         Ok(())
     }
@@ -186,6 +186,9 @@ impl Calc {
             Alias => {
                 let val = self.get_word()?;
                 let name = self.get_word()?;
+                if self.dict.lookup(&val).is_none() {
+                    return Err(ErrorKind::UnknownWord(val).into());
+                }
                 self.dict.insert_alias(name, val);
                 Ok(())
             }
