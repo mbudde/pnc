@@ -162,6 +162,7 @@ impl Calc {
             Mul => self.perform_binop(::std::ops::Mul::mul, ::std::ops::Mul::mul),
             Div => self.builtin_div(),
             Print => self.builtin_print(),
+            Dump => self.print_stack(),
             Pop => {
                 self.data.pop();
                 Ok(())

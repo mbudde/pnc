@@ -127,6 +127,7 @@ impl Default for Dictionary {
         dict.insert("over", Operation::Builtin(BuiltinWord::Over));
         dict.insert("pop", Operation::Builtin(BuiltinWord::Pop));
         dict.insert("print", Operation::Builtin(BuiltinWord::Print));
+        dict.insert("dump", Operation::Builtin(BuiltinWord::Dump));
         dict.insert("repeat", Operation::Builtin(BuiltinWord::Repeat));
         dict.insert("roll3", Operation::Builtin(BuiltinWord::Roll3));
         dict.insert("stdin", Operation::Builtin(BuiltinWord::Stdin));

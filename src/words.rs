@@ -39,6 +39,7 @@ pub enum BuiltinWord {
 
     // IO
     Print,
+    Dump,
     Stdin,
 
     // Vectors
