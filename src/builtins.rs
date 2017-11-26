@@ -80,7 +80,7 @@ impl Calc {
         for val in vec {
             let mut sub_calc = self.sub_calc();
             sub_calc.data.push(val);
-            sub_calc.run(block.iter())?;
+            sub_calc.run(&block)?;
             if let Some(res) = sub_calc.data.pop() {
                 result.push(res);
             } else {
@@ -100,9 +100,7 @@ impl Calc {
         sub_calc.data.push(init);
         for val in values {
             sub_calc.data.push(val);
-            for word in &block {
-                sub_calc.run_one(word)?;
-            }
+            sub_calc.run(&block)?;
         }
         if let Some(res) = sub_calc.data.pop() {
             self.data.push(res);
@@ -119,9 +117,7 @@ impl Calc {
         for val in values {
             let mut sub_calc = self.sub_calc();
             sub_calc.data.push(val.clone());
-            for word in &block {
-                sub_calc.run_one(word)?;
-            }
+            sub_calc.run(&block)?;
             if let Some(res) = sub_calc.data.pop() {
                 match res {
                     Value::Int(ref x) if !x.is_zero() => { result.push(val); }
@@ -188,9 +184,7 @@ impl Calc {
         let n = self.get_int_cast()?;
         let block = self.get_block()?;
         for _ in 0..n {
-            for word in &block {
-                self.run_one(word)?;
-            }
+            self.run(&block)?;
         }
         Ok(())
     }
@@ -212,9 +206,7 @@ impl Calc {
                 self.run_one(&word)?;
             }
             Value::Block(block) => {
-                for word in &block {
-                    self.run_one(word)?;
-                }
+                self.run(block)?;
             }
             _ => {}
         }
@@ -253,7 +245,7 @@ impl Calc {
         let test = self.get_int()?;
         let mut run_block = |block| -> Result<()> {
             match block {
-                Value::Block(block) => self.run(block.iter()),
+                Value::Block(block) => self.run(block),
                 v => {
                     self.data.push(v);
                     Ok(())

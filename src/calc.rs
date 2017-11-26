@@ -55,10 +55,10 @@ impl Calc {
     }
 
     pub fn run<I, T>(&mut self, iter: I) -> Result<()>
-        where I: Iterator<Item = T>,
+        where I: IntoIterator<Item = T>,
               T: AsRef<str>
     {
-        for word in iter {
+        for word in iter.into_iter() {
             let word = word.as_ref();
             self.run_one(word)
                 .chain_err(|| format!("error while evaluating word '{}'", word))?;
@@ -140,7 +140,7 @@ impl Calc {
                         }
                         Operation::Block(ref block) => {
                             trace!("executing block: {:?}", block);
-                            self.run(block.into_iter())?;
+                            self.run(block)?;
                         }
                     }
                 } else {
