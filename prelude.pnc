@@ -70,8 +70,8 @@
 
 
 ,vmax {
-    0 { max } fold
+    { max } fold1
 } def
 ,vmin {
-    0 { min } fold
+    { min } fold1
 } def

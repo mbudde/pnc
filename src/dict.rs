@@ -120,6 +120,7 @@ impl Default for Dictionary {
         dict.insert("div", Operation::Builtin(BuiltinWord::Div));
         dict.insert("dup", Operation::Builtin(BuiltinWord::Duplicate));
         dict.insert("fold", Operation::Builtin(BuiltinWord::Fold));
+        dict.insert("fold1", Operation::Builtin(BuiltinWord::Fold1));
         dict.insert("len", Operation::Builtin(BuiltinWord::Length));
         dict.insert("map", Operation::Builtin(BuiltinWord::Map));
         dict.insert("filter", Operation::Builtin(BuiltinWord::Filter));

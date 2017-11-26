@@ -85,6 +85,23 @@ impl Calc {
         }
     }
 
+    pub fn builtin_fold1(&mut self) -> Result<()> {
+        let block = self.get_block()?;
+        let mut values = self.get_vector()?.into_iter();
+
+        if let Some(init) = values.next() {
+            let mut sub_calc = self.sub_calc();
+            sub_calc.data.push(init);
+            for val in values {
+                sub_calc.data.push(val);
+                sub_calc.run(&block)?;
+            }
+            let res = sub_calc.data.pop().ok_or::<Error>(ErrorKind::BlockNoResult.into())?;
+            self.data.push(res);
+        }
+        Ok(())
+    }
+
     pub fn builtin_filter(&mut self) -> Result<()> {
         let block = self.get_block()?;
         let values = self.get_vector()?;

@@ -171,6 +171,7 @@ impl Calc {
             Stdin => self.builtin_stdin(),
             Map => self.builtin_map(),
             Fold => self.builtin_fold(),
+            Fold1 => self.builtin_fold1(),
             Filter => self.builtin_filter(),
             Length => self.builtin_length(),
             Swap => self.builtin_swap(),

@@ -15,6 +15,7 @@ pub enum BuiltinWord {
 
     // Functional
     Fold,
+    Fold1,
     Map,
     Filter,
     Repeat,
