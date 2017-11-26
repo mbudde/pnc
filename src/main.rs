@@ -80,7 +80,6 @@ fn run() -> Result<()> {
         match File::open(&p) {
             Ok(mut prelude_file) => {
                 let mut prelude = String::new();
-                println!("{:?}", prelude);
                 prelude_file.read_to_string(&mut prelude)
                     .chain_err(|| format!("could not read user prelude {:?}", p))?;
 
