@@ -99,7 +99,17 @@ fn run() -> Result<()> {
     } else {
         if let Some(words) = args.values_of("WORD") {
             calc.run(words).chain_err(|| "failed to execute words in arguments")?;
+        } else {
+            use std::io::BufRead;
+            let stdin = ::std::io::stdin();
+            let stdin = stdin.lock();
+            for line in stdin.lines() {
+                let line = line.unwrap();
+                let words = shlex::Shlex::new(&line);
+                calc.run(words).chain_err(|| "failed to execute words from standard in")?;
+            }
         }
+
         if !args.is_present("quiet") {
             calc.print_stack().chain_err(|| "failed to print stack")?;
         }
