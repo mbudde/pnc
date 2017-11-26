@@ -171,7 +171,6 @@ impl Calc {
             Map => self.builtin_map(),
             Fold => self.builtin_fold(),
             Filter => self.builtin_filter(),
-            Sum => self.builtin_sum(),
             Length => self.builtin_length(),
             Swap => self.builtin_swap(),
             Over => self.builtin_over(),

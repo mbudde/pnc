@@ -12,10 +12,11 @@ pub enum BuiltinWord {
     Sub,
     Mul,
     Div,
+
+    // Functional
     Fold,
     Map,
     Filter,
-    Sum,
     Repeat,
 
     // Comparisons

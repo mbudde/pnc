@@ -131,7 +131,6 @@ impl Default for Dictionary {
         dict.insert("roll3", Operation::Builtin(BuiltinWord::Roll3));
         dict.insert("stdin", Operation::Builtin(BuiltinWord::Stdin));
         dict.insert("sub", Operation::Builtin(BuiltinWord::Sub));
-        dict.insert("sum", Operation::Builtin(BuiltinWord::Sum));
         dict.insert("swap", Operation::Builtin(BuiltinWord::Swap));
         dict.insert("arg", Operation::Builtin(BuiltinWord::Arg));
 

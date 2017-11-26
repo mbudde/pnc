@@ -133,23 +133,6 @@ impl Calc {
         Ok(())
     }
 
-    pub fn builtin_sum(&mut self) -> Result<()> {
-        let mut sum = Value::Int(Zero::zero());
-        {
-            let a = self.get_operand()?;
-            if let Value::Vector(ref vec) = a {
-                for val in vec {
-                    sum = add(sum, val)?;
-                }
-            } else {
-                return Err(ErrorKind::WrongTypeOperand(a, "vector").into());
-            }
-
-        }
-        self.data.push(sum);
-        Ok(())
-    }
-
     pub fn builtin_length(&mut self) -> Result<()> {
         let len = {
             let a = self.get_operand()?;

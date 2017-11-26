@@ -19,8 +19,10 @@
 ,++ { 1 + } def
 ,-- { 1 - } def
 
-,/+ { 0 { + } fold } def
-,/. { 1 { . } fold } def
+,sum { 0 { + } fold } def
+,product { 1 { . } fold } def
+,/+ ,sum alias
+,/. ,product alias
 
 ,1/ { 1 swap div } def
 
