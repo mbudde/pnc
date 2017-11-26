@@ -54,15 +54,24 @@
     pop
 } def
 
-,seq {
-    [ arg 1 swap { d ++ } swap repeat pop ]
-} def
-
 ,range {
-    [ arg arg swap over - { dup ++ } swap repeat ]
+    [
+        arg   # from
+        arg   # to
+        swap over -
+        d 0 ge
+        {
+            { dup ++ } swap repeat
+        }
+        { pop pop }
+        if
+    ]
 } def
 
+,seq ,range alias
 ,.. ,range alias
+
+,upto { 1 swap range } def
 
 ,! { seq /. } def
 
