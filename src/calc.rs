@@ -199,6 +199,7 @@ impl Calc {
             Min => self.builtin_min(),
             Max => self.builtin_max(),
             Cmp => self.builtin_cmp(),
+            If => self.buildin_if(),
         }
     }
 

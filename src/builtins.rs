@@ -80,9 +80,7 @@ impl Calc {
         for val in vec {
             let mut sub_calc = self.sub_calc();
             sub_calc.data.push(val);
-            for word in &block {
-                sub_calc.run_one(word)?;
-            }
+            sub_calc.run(block.iter())?;
             if let Some(res) = sub_calc.data.pop() {
                 result.push(res);
             } else {
@@ -247,6 +245,28 @@ impl Calc {
         };
         self.data.push(Value::Int(cmp.to_bigint().unwrap()));
         Ok(())
+    }
+
+    pub fn buildin_if(&mut self) -> Result<()> {
+        let else_block = self.get_operand()?;
+        let then_block = self.get_operand()?;
+        let test = self.get_int()?;
+        let mut run_block = |block| -> Result<()> {
+            match block {
+                Value::Block(block) => self.run(block.iter()),
+                v => {
+                    self.data.push(v);
+                    Ok(())
+                }
+            }
+        };
+        if !test.is_zero() {
+            run_block(then_block)
+                .chain_err(|| "error while evaluating then-part of if command")
+        } else {
+            run_block(else_block)
+                .chain_err(|| "error while evaluating else-part of if command")
+        }
     }
 }
 

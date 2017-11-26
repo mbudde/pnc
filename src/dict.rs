@@ -139,6 +139,7 @@ impl Default for Dictionary {
         dict.insert("max", Operation::Builtin(BuiltinWord::Max));
 
         dict.insert("cmp", Operation::Builtin(BuiltinWord::Cmp));
+        dict.insert("if", Operation::Builtin(BuiltinWord::If));
         dict
     }
 }

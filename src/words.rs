@@ -42,6 +42,9 @@ pub enum BuiltinWord {
 
     // Vectors
     Length,
+
+    // Control flow
+    If,
 }
 
 #[derive(Debug, PartialEq, Eq)]
