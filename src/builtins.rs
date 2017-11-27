@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use num::Zero;
+use num::{Zero, ToPrimitive};
 use num::bigint::ToBigInt;
 
 use words::Value;
@@ -233,6 +233,33 @@ impl Calc {
         } else {
             run_block(else_block)
                 .chain_err(|| "error while evaluating else-part of if command")
+        }
+    }
+
+    pub fn builtin_mod(&mut self) -> Result<()> {
+        let b = self.get_int()?;
+        let a = self.get_int()?;
+        self.data.push(Value::Int(a % b));
+        Ok(())
+    }
+
+    pub fn builtin_pow(&mut self) -> Result<()> {
+        let n = self.get_operand()?;
+        let a = self.get_float_cast()?;
+        match n {
+            Value::Int(bignum) => {
+                let m = bignum.to_i32()
+                    .ok_or::<Error>(ErrorKind::BigIntTooLarge.into())?;
+                self.data.push(Value::Float(a.powi(m)));
+                Ok(())
+            }
+            Value::Float(b) => {
+                self.data.push(Value::Float(a.powf(b)));
+                Ok(())
+            }
+            v => {
+                Err(ErrorKind::WrongTypeOperand(v, "int or float").into())
+            }
         }
     }
 }

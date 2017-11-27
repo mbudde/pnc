@@ -12,6 +12,18 @@ pub enum BuiltinWord {
     Sub,
     Mul,
     Div,
+    Mod,
+    Sqrt,
+    Pow,
+    Exp,
+    Log,
+    Ln,
+    Sin,
+    Cos,
+    Tan,
+    Asin,
+    Acos,
+    Atan,
 
     // Functional
     Fold,

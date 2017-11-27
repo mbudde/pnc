@@ -113,34 +113,44 @@ impl Dictionary {
 impl Default for Dictionary {
     fn default() -> Dictionary {
         let mut dict = Dictionary::new();
-        dict.insert("apply", Operation::Builtin(BuiltinWord::Apply));
-        dict.insert("add", Operation::Builtin(BuiltinWord::Add));
-        dict.insert("alias", Operation::Builtin(BuiltinWord::Alias));
-        dict.insert("def", Operation::Builtin(BuiltinWord::Def));
-        dict.insert("div", Operation::Builtin(BuiltinWord::Div));
-        dict.insert("dup", Operation::Builtin(BuiltinWord::Duplicate));
-        dict.insert("fold", Operation::Builtin(BuiltinWord::Fold));
-        dict.insert("fold1", Operation::Builtin(BuiltinWord::Fold1));
-        dict.insert("len", Operation::Builtin(BuiltinWord::Length));
-        dict.insert("map", Operation::Builtin(BuiltinWord::Map));
+        dict.insert("acos",   Operation::Builtin(BuiltinWord::Acos));
+        dict.insert("add",    Operation::Builtin(BuiltinWord::Add));
+        dict.insert("alias",  Operation::Builtin(BuiltinWord::Alias));
+        dict.insert("apply",  Operation::Builtin(BuiltinWord::Apply));
+        dict.insert("arg",    Operation::Builtin(BuiltinWord::Arg));
+        dict.insert("asin",   Operation::Builtin(BuiltinWord::Asin));
+        dict.insert("atan",   Operation::Builtin(BuiltinWord::Atan));
+        dict.insert("cmp",    Operation::Builtin(BuiltinWord::Cmp));
+        dict.insert("cos",    Operation::Builtin(BuiltinWord::Cos));
+        dict.insert("def",    Operation::Builtin(BuiltinWord::Def));
+        dict.insert("div",    Operation::Builtin(BuiltinWord::Div));
+        dict.insert("dump",   Operation::Builtin(BuiltinWord::Dump));
+        dict.insert("dup",    Operation::Builtin(BuiltinWord::Duplicate));
+        dict.insert("exp",    Operation::Builtin(BuiltinWord::Exp));
         dict.insert("filter", Operation::Builtin(BuiltinWord::Filter));
-        dict.insert("mul", Operation::Builtin(BuiltinWord::Mul));
-        dict.insert("over", Operation::Builtin(BuiltinWord::Over));
-        dict.insert("pop", Operation::Builtin(BuiltinWord::Pop));
-        dict.insert("print", Operation::Builtin(BuiltinWord::Print));
-        dict.insert("dump", Operation::Builtin(BuiltinWord::Dump));
+        dict.insert("fold",   Operation::Builtin(BuiltinWord::Fold));
+        dict.insert("fold1",  Operation::Builtin(BuiltinWord::Fold1));
+        dict.insert("if",     Operation::Builtin(BuiltinWord::If));
+        dict.insert("len",    Operation::Builtin(BuiltinWord::Length));
+        dict.insert("ln",     Operation::Builtin(BuiltinWord::Ln));
+        dict.insert("log",    Operation::Builtin(BuiltinWord::Log));
+        dict.insert("map",    Operation::Builtin(BuiltinWord::Map));
+        dict.insert("max",    Operation::Builtin(BuiltinWord::Max));
+        dict.insert("min",    Operation::Builtin(BuiltinWord::Min));
+        dict.insert("mod",    Operation::Builtin(BuiltinWord::Mod));
+        dict.insert("mul",    Operation::Builtin(BuiltinWord::Mul));
+        dict.insert("over",   Operation::Builtin(BuiltinWord::Over));
+        dict.insert("pop",    Operation::Builtin(BuiltinWord::Pop));
+        dict.insert("pow",    Operation::Builtin(BuiltinWord::Pow));
+        dict.insert("print",  Operation::Builtin(BuiltinWord::Print));
         dict.insert("repeat", Operation::Builtin(BuiltinWord::Repeat));
-        dict.insert("roll3", Operation::Builtin(BuiltinWord::Roll3));
-        dict.insert("stdin", Operation::Builtin(BuiltinWord::Stdin));
-        dict.insert("sub", Operation::Builtin(BuiltinWord::Sub));
-        dict.insert("swap", Operation::Builtin(BuiltinWord::Swap));
-        dict.insert("arg", Operation::Builtin(BuiltinWord::Arg));
-
-        dict.insert("min", Operation::Builtin(BuiltinWord::Min));
-        dict.insert("max", Operation::Builtin(BuiltinWord::Max));
-
-        dict.insert("cmp", Operation::Builtin(BuiltinWord::Cmp));
-        dict.insert("if", Operation::Builtin(BuiltinWord::If));
+        dict.insert("roll3",  Operation::Builtin(BuiltinWord::Roll3));
+        dict.insert("sin",    Operation::Builtin(BuiltinWord::Sin));
+        dict.insert("sqrt",   Operation::Builtin(BuiltinWord::Sqrt));
+        dict.insert("stdin",  Operation::Builtin(BuiltinWord::Stdin));
+        dict.insert("sub",    Operation::Builtin(BuiltinWord::Sub));
+        dict.insert("swap",   Operation::Builtin(BuiltinWord::Swap));
+        dict.insert("tan",    Operation::Builtin(BuiltinWord::Tan));
         dict
     }
 }

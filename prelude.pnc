@@ -8,7 +8,7 @@
 ,- ,sub   alias
 ,. ,mul   alias
 ,/ ,div   alias
-#,% ,mod   alias
+,% ,mod   alias
 ,s ,swap  alias
 ,d ,dup   alias
 ,p ,print alias
@@ -16,6 +16,7 @@
 ,× ,mul   alias
 ,· ,mul   alias
 ,@ ,map   alias
+,^ ,pow   alias
 
 ,peek { dup print } def
 ,pp ,peek alias
@@ -29,6 +30,10 @@
 ,/. ,product alias
 
 ,1/ { 1 swap div } def
+
+,log10 { 10 log } def
+,log2 { 2 log } def
+,^2 { 2 pow } def
 
 ,abs { dup sign . } def
 ,sign { 0 cmp } def

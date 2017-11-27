@@ -161,6 +161,19 @@ impl Calc {
             Sub => self.perform_binop(::std::ops::Sub::sub, ::std::ops::Sub::sub),
             Mul => self.perform_binop(::std::ops::Mul::mul, ::std::ops::Mul::mul),
             Div => self.builtin_div(),
+            Mod => self.builtin_mod(),
+            Sqrt => self.perform_unary(f64::sqrt),
+            Pow => self.builtin_pow(),
+            Exp => self.perform_unary(f64::exp),
+            Log => self.perform_float_binary(f64::log),
+            Ln => self.perform_unary(f64::ln),
+            Sin => self.perform_unary(f64::sin),
+            Cos => self.perform_unary(f64::cos),
+            Tan => self.perform_unary(f64::tan),
+            Asin => self.perform_unary(f64::asin),
+            Acos => self.perform_unary(f64::acos),
+            Atan => self.perform_unary(f64::atan),
+
             Print => self.builtin_print(),
             Dump => self.print_stack(),
             Pop => {
@@ -251,12 +264,20 @@ impl Calc {
         })
     }
 
-    #[allow(dead_code)]
     fn perform_unary<F>(&mut self, f: F) -> Result<()>
         where F: Fn(f64) -> f64
     {
         let x = self.get_float_cast()?;
         self.data.push(Value::Float(f(x)));
+        Ok(())
+    }
+
+    fn perform_float_binary<F>(&mut self, f: F) -> Result<()>
+        where F: Fn(f64, f64) -> f64
+    {
+        let y = self.get_float_cast()?;
+        let x = self.get_float_cast()?;
+        self.data.push(Value::Float(f(x, y)));
         Ok(())
     }
 
