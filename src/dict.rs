@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::collections::{HashMap, BTreeMap};
 use words::{Word, BuiltinWord, Operation};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 enum Entry {
     Alias(Word),
     Op(Rc<Operation>),

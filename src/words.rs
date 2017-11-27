@@ -62,13 +62,13 @@ pub enum BuiltinWord {
     If,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 pub enum Operation {
     Builtin(BuiltinWord),
-    Block(Vec<Word>),
+    Value(Value),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     #[allow(dead_code)]
     Bool(bool),

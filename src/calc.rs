@@ -138,9 +138,12 @@ impl Calc {
                         Operation::Builtin(builtin) => {
                             self.run_builtin(builtin)?;
                         }
-                        Operation::Block(ref block) => {
+                        Operation::Value(Value::Block(ref block)) => {
                             trace!("executing block: {:?}", block);
                             self.run(block)?;
+                        }
+                        Operation::Value(ref v) => {
+                            self.data.push(v.clone());
                         }
                     }
                 } else {
@@ -192,9 +195,9 @@ impl Calc {
             Repeat => self.builtin_repeat(),
             Roll3 => self.builtin_roll3(),
             Def => {
-                let block = self.get_block()?;
+                let value = self.get_operand()?;
                 let name = self.get_word()?;
-                self.dict.insert(name, Operation::Block(block));
+                self.dict.insert(name, Operation::Value(value));
                 Ok(())
             }
             Alias => {
