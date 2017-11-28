@@ -70,6 +70,7 @@ pub enum Operation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
+    Undef,
     #[allow(dead_code)]
     Bool(bool),
     Int(BigInt),
@@ -152,6 +153,7 @@ impl Value {
 
     pub fn type_of(&self) -> &'static str {
         match *self {
+            Value::Undef          => "undef",
             Value::Bool(..)       => "type",
             Value::Int(..)        => "int",
             Value::Float(..)      => "float",
@@ -166,6 +168,7 @@ impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::Value::*;
         match *self {
+            Undef => write!(f, "undef"),
             Bool(v) => v.fmt(f),
             Int(ref v) => write!(f, "{}", v),
             Float(v) => write!(f, "{}", v),

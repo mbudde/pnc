@@ -203,9 +203,31 @@ impl Calc {
     }
 
     pub fn builtin_cmp(&mut self) -> Result<()> {
-        let a = self.get_int()?;
-        let b = self.get_int()?;
-        let cmp = match b.cmp(&a) {
+        let a = self.get_operand()?;
+        let b = self.get_operand()?;
+        let ord = match (a, b) {
+            (Value::Undef, Value::Undef) => Ordering::Equal,
+            (Value::Undef, _) | (_, Value::Undef) => {
+                self.data.push(Value::Undef);
+                return Ok(());
+            }
+            (Value::Bool(x), Value::Bool(y)) => y.cmp(&x),
+            (Value::Int(x), Value::Int(y)) => y.cmp(&x),
+            (Value::QuotedWord(x), Value::QuotedWord(y)) => y.cmp(&x),
+            (Value::Float(x), Value::Float(y)) => {
+                match y.partial_cmp(&x) {
+                    Some(ord) => ord,
+                    None => {
+                        self.data.push(Value::Undef);
+                        return Ok(());
+                    }
+                }
+            }
+            (x, y) => {
+                return Err(format!("cannot compare '{}' (of type {}) with '{}' (of type {})", x, x.type_of(), y, y.type_of()).into());
+            }
+        };
+        let cmp = match ord {
             Ordering::Less => -1,
             Ordering::Equal => 0,
             Ordering::Greater => 1,
